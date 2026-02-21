@@ -20,18 +20,18 @@ O projeto tem como objetivo praticar:
 
 ---
 
-<pre> ## 📂 Estrutura do projeto ``` 
-  
-src/main/java/com/jonathas 
-  
-├── database 
-│ └── ConnectionFactory.java 
-├── model 
-│ └── Produto.java 
-├── repository 
-│ └── ProdutoRepository.java 
-└── Main.java ``` </pre>
+## 📂 Estrutura do projeto
 
+<pre>
+src/main/java/com/jonathas
+├── 📁 database
+│ └── 📁 ConnectionFactory.java
+├── 📁 model
+│ └── 📁 Produto.java
+├── 📁 repository
+│ └── 📁 ProdutoRepository.java
+└── 📁 Main.java
+</pre>
 
 ---
 
