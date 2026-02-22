@@ -10,7 +10,7 @@ import java.util.List;
 public class ProdutoRepository {
 
     public void salvar(Produto produto) {
-        String sql = "INSERT INTO produto (nome, descricao, ativo) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO produto (nome, descricao, ativo, quantidade) VALUES (?, ?, ?, ?)";
 
         try(Connection connection = ConnectionFactory.getConnection();
             PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -18,6 +18,7 @@ public class ProdutoRepository {
             stmt.setString(1, produto.getNome());
             stmt.setString(2, produto.getDescricao());
             stmt.setBoolean(3, produto.getAtivo());
+            stmt.setInt(4, produto.getQuantidade());
 
             stmt.executeUpdate();
 
@@ -50,6 +51,7 @@ public class ProdutoRepository {
                 produto.setNome(rs.getString("nome"));
                 produto.setDescricao(rs.getString("descricao"));
                 produto.setAtivo(rs.getBoolean("ativo"));
+                produto.setQuantidade(rs.getInt("quantidade"));
 
                 produtos.add(produto);
             }
@@ -61,6 +63,7 @@ public class ProdutoRepository {
     }
 
     public Produto buscarPorId(Long id) {
+
         String sql = "SELECT * FROM produto WHERE id = ?";
 
         try (Connection connection = ConnectionFactory.getConnection();
@@ -68,17 +71,19 @@ public class ProdutoRepository {
 
             stmt.setLong(1, id);
 
-            ResultSet rs = stmt.executeQuery();
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Produto produto = new Produto();
+                    produto.setId(rs.getLong("id"));
+                    produto.setNome(rs.getString("nome"));
+                    produto.setDescricao(rs.getString("descricao"));
+                    produto.setAtivo(rs.getBoolean("ativo"));
+                    produto.setQuantidade(rs.getInt("quantidade"));
 
-            if (rs.next()) {
-                Produto produto = new Produto();
-                produto.setId(rs.getLong("id"));
-                produto.setNome(rs.getString("nome"));
-                produto.setDescricao(rs.getString("descricao"));
-                produto.setAtivo(rs.getBoolean("ativo"));
-
-                return produto;
+                    return produto;
+                }
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }

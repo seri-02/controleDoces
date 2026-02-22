@@ -1,24 +1,19 @@
 package com.jonathas;
 
-import com.jonathas.model.Emitente;
-import com.jonathas.repository.EmitenteRepository;
+import com.jonathas.database.ConnectionFactory;
+import com.jonathas.model.Produto;
+import com.jonathas.model.Venda;
+import com.jonathas.repository.ProdutoRepository;
+import com.jonathas.repository.VendaRepository;
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
 
 public class Main {
     public static void main(String[] args) {
 
-        EmitenteRepository emitenteRepository = new EmitenteRepository();
-
-        Emitente emitente = new Emitente();
-        emitente.setNome("Fornecedor Teste");
-        emitente.setDocumento("12345678900");
-        emitente.setTipo("FORNECEDOR");
-        emitente.setAtivo(true);
-
-        emitenteRepository.salvar(emitente);
-
-        System.out.println("Emitente salvo com ID: " + emitente.getId());
-
-        emitenteRepository.listarTodos().forEach(System.out::println);
+        System.out.println("ControleDoces - MVP em desenvolvimento. Próximo passo: menu no console.");
 
     }
 }

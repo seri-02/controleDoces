@@ -6,21 +6,24 @@ public class Produto {
     private String nome;
     private String descricao;
     private Boolean ativo;
+    private Integer quantidade;
 
     public Produto() {
     }
 
-    public Produto(Long id, String nome, String descricao, Boolean ativo) {
+    public Produto(Long id, String nome, String descricao, Boolean ativo, Integer quantidade) {
         this.id = id;
         this.nome = nome;
         this.descricao = descricao;
         this.ativo = ativo;
+        this.quantidade = quantidade;
     }
 
-    public Produto(String nome, String descricao) {
+    public Produto(String nome, String descricao, Integer quantidade) {
         this.nome = nome;
         this.descricao = descricao;
         this.ativo = true;
+        this.quantidade = quantidade;
     }
 
     public Long getId() {
@@ -55,13 +58,22 @@ public class Produto {
         this.ativo = ativo;
     }
 
+    public Integer getQuantidade() {
+        return quantidade;
+    }
+
+    public void setQuantidade(Integer quantidade) {
+        this.quantidade = quantidade;
+    }
+
     @Override
     public String toString() {
         return "Produto{" +
                 "id=" + id +
                 ", nome='" + nome + '\'' +
                 ", descricao='" + descricao + '\'' +
-                ", ativo=" + ativo +
+                ", ativo=" + ativo + '\'' +
+                ", quantidade=" + quantidade +
                 '}';
     }
 
