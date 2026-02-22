@@ -1,25 +1,24 @@
 package com.jonathas;
 
-import com.jonathas.model.Produto;
-import com.jonathas.repository.ProdutoRepository;
-
-/*import com.jonathas.database.ConnectionFactory;
-import java.sql.Connection;
-import java.sql.SQLException;*/
+import com.jonathas.model.Emitente;
+import com.jonathas.repository.EmitenteRepository;
 
 public class Main {
     public static void main(String[] args) {
 
-        ProdutoRepository repository = new ProdutoRepository();
+        EmitenteRepository emitenteRepository = new EmitenteRepository();
 
-        Produto novoProduto = new Produto("Teste Produto Java", "Produto criado via JDBC");
+        Emitente emitente = new Emitente();
+        emitente.setNome("Fornecedor Teste");
+        emitente.setDocumento("12345678900");
+        emitente.setTipo("FORNECEDOR");
+        emitente.setAtivo(true);
 
-        repository.salvar(novoProduto);
+        emitenteRepository.salvar(emitente);
 
-        System.out.println("ID gerado: " + novoProduto.getId());
+        System.out.println("Emitente salvo com ID: " + emitente.getId());
 
-        System.out.println("Lista de produtos:");
-        repository.listarTodos().forEach(System.out::println);
+        emitenteRepository.listarTodos().forEach(System.out::println);
 
     }
 }
