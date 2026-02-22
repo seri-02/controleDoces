@@ -29,9 +29,11 @@ src/main/java/com/jonathas
 ├── model
 │   ├── Produto.java
 │   └── Emitente.java
+│   └── Venda.java 
 ├── repository
 │   ├── ProdutoRepository.java
 │   └── EmitenteRepository.java
+│   └── VendaRepository.java 
 └── Main.java
 </pre>
 
@@ -42,6 +44,10 @@ src/main/java/com/jonathas
 - CRUD de Produto
 - CRUD de Emitente
 - Integração com MySQL via JDBC
+- Registro de venda com:
+  - Validação de estoque
+  - Baixa automática na quantidade do produto
+  - Transação (commit/rollback)
 
 ---
 
@@ -49,6 +55,7 @@ src/main/java/com/jonathas
 
 Em desenvolvimento 🚧
 
-Já possui cadastro e listagem de Produtos e Emitentes com persistência no banco.
+Já dá pra cadastrar produto com quantidade e registrar vendas com baixa automática no estoque.
 
-Agora vou implementar o relacionamento entre as entidades para evoluir a modelagem.
+### Próximo passo:
+  - Fazer um menu no console.
