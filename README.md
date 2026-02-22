@@ -24,25 +24,31 @@ O projeto tem como objetivo praticar:
 
 <pre>
 src/main/java/com/jonathas
-├── 📁 database
-│ └── 📁 ConnectionFactory.java
-├── 📁 model
-│ └── 📁 Produto.java
-├── 📁 repository
-│ └── 📁 ProdutoRepository.java
-└── 📁 Main.java
+├── database
+│   └── ConnectionFactory.java
+├── model
+│   ├── Produto.java
+│   └── Emitente.java
+├── repository
+│   ├── ProdutoRepository.java
+│   └── EmitenteRepository.java
+└── Main.java
 </pre>
 
 ---
 
 ## 🚀 Funcionalidades implementadas
 
-- Criar produto
-- Listar produtos
-- Buscar produto por ID
+- CRUD de Produto
+- CRUD de Emitente
+- Integração com MySQL via JDBC
 
 ---
 
 ## 📌 Status
 
 Em desenvolvimento 🚧
+
+Já possui cadastro e listagem de Produtos e Emitentes com persistência no banco.
+
+Agora vou implementar o relacionamento entre as entidades para evoluir a modelagem.
