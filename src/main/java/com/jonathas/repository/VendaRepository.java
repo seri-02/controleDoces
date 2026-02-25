@@ -85,4 +85,36 @@ public class VendaRepository {
             connection.setAutoCommit(true);
         }
     }
+
+    public List<Venda> listarTodas() throws SQLException {
+
+        String sql = """
+            SELECT id, produto_id, quantidade, valor_unitario, data_venda
+            FROM venda
+            ORDER BY data_venda DESC
+        """;
+
+        List<Venda> vendas = new ArrayList<>();
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+
+                Produto produto = new Produto();
+                produto.setId(rs.getLong("produto_id"));
+
+                Venda venda = new Venda();
+                venda.setId(rs.getLong("id"));
+                venda.setProduto(produto);
+                venda.setQuantidade(rs.getInt("quantidade"));
+                venda.setValorUnitario(rs.getBigDecimal("valor_unitario"));
+
+                vendas.add(venda);
+            }
+        }
+
+        return vendas;
+    }
+
 }
