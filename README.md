@@ -36,14 +36,16 @@ Projeto console (CLI), desenvolvido em Java puro.
   ├── database
   │   └── ConnectionFactory.java
   ├── model
-  │   ├── Produto.java
-  │   └── Emitente.java
+  │   └──  Produto.java
+  │   └── ItemVenda.java
   │   └── Venda.java 
   ├── repository
-  │   ├── ProdutoRepository.java
-  │   └── EmitenteRepository.java
+  │   └── ProdutoRepository.java
+  │   └── ItemVendaRepository.java
   │   └── VendaRepository.java 
-  └── Main.java
+  ├── service
+  │   └── VendaService.Java   
+  ├──  Main.java
 </pre>
 
 ---
@@ -51,19 +53,22 @@ Projeto console (CLI), desenvolvido em Java puro.
 ## 🚀 Funcionalidades implementadas
 
 - CRUD de Produto
-- CRUD de Emitente
-- CRUD de Venda
+- Venda:
+  - Registrar vendas com múltiplos itens
+  - Transação única:
+    - insere venda
+    - insere N itens
+    - baixa estoque para cada item
+  - Listar vendas com itens + total
 - Integração com MySQL via JDBC
 
 ---
 
 ## 📌 Status
 
-✅ MVP v1 concluído e em uso para controle real das vendas.
+✅ V2.0 concluída: service layer + venda com múltiplos itens
 
 ### Próximos passos (V2):
 
-- Relatórios por período
-- Relatórios por produto
-- Integração de Emitente no fluxo de venda
-- Introduzir camada service
+- V2.1: Cliente + contas a receber + pagamento
+- V2.2: Relátórios (período, produto, devedores)
