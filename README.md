@@ -1,13 +1,19 @@
-# Controle de Doces
+# Controle de Doces 📦
 
-Sistema de controle de produtos desenvolvido em Java utilizando Maven, JDBC e MySQL.
+Sistema real de gerenciamento de vendas e controle de estoque para doces, desenvolvido como projeto pessoal para aplicar e aprofundar conhecimentos em Java, JDBC e MySQL.
 
-O projeto tem como objetivo praticar:
+O sistema é utilizado para registrar vendas reais e controlar estoque de produção.
+
+Projeto console (CLI), desenvolvido em Java puro.
+
+## 🎯 Objetivo
 
 - Arquitetura em camadas
+- Separação de responsabilidades
 - Persistência com JDBC
-- Organização de projeto Maven
-- Versionamento com Git
+- Modelagem relacional
+- Regras de negócio
+- Boas práticas de versionamento
 
 ---
 
@@ -17,24 +23,27 @@ O projeto tem como objetivo praticar:
 - Maven
 - MySQL
 - JDBC
+- IntelliJ IDEA
 
 ---
 
-## 📂 Estrutura do projeto
+## 📂 Estrutura do projeto (MVP)
 
 <pre>
-src/main/java/com/jonathas
-├── database
-│   └── ConnectionFactory.java
-├── model
-│   ├── Produto.java
-│   └── Emitente.java
-│   └── Venda.java 
-├── repository
-│   ├── ProdutoRepository.java
-│   └── EmitenteRepository.java
-│   └── VendaRepository.java 
-└── Main.java
+ com.jonathas
+  ├── app
+  │   └── ConsoleApp.Java
+  ├── database
+  │   └── ConnectionFactory.java
+  ├── model
+  │   ├── Produto.java
+  │   └── Emitente.java
+  │   └── Venda.java 
+  ├── repository
+  │   ├── ProdutoRepository.java
+  │   └── EmitenteRepository.java
+  │   └── VendaRepository.java 
+  └── Main.java
 </pre>
 
 ---
@@ -43,19 +52,18 @@ src/main/java/com/jonathas
 
 - CRUD de Produto
 - CRUD de Emitente
+- CRUD de Venda
 - Integração com MySQL via JDBC
-- Registro de venda com:
-  - Validação de estoque
-  - Baixa automática na quantidade do produto
-  - Transação (commit/rollback)
 
 ---
 
 ## 📌 Status
 
-Em desenvolvimento 🚧
+✅ MVP v1 concluído e em uso para controle real das vendas.
 
-Já dá pra cadastrar produto com quantidade e registrar vendas com baixa automática no estoque.
+### Próximos passos (V2):
 
-### Próximo passo:
-  - Fazer um menu no console.
+- Relatórios por período
+- Relatórios por produto
+- Integração de Emitente no fluxo de venda
+- Introduzir camada service
