@@ -1,13 +1,19 @@
-# Controle de Doces
+# Controle de Doces 📦
 
-Sistema de controle de produtos desenvolvido em Java utilizando Maven, JDBC e MySQL.
+Sistema real de gerenciamento de vendas e controle de estoque para doces, desenvolvido como projeto pessoal para aplicar e aprofundar conhecimentos em Java, JDBC e MySQL.
 
-O projeto tem como objetivo praticar:
+O sistema é utilizado para registrar vendas reais e controlar estoque de produção.
+
+Projeto console (CLI), desenvolvido em Java puro.
+
+## 🎯 Objetivo
 
 - Arquitetura em camadas
+- Separação de responsabilidades
 - Persistência com JDBC
-- Organização de projeto Maven
-- Versionamento com Git
+- Modelagem relacional
+- Regras de negócio
+- Boas práticas de versionamento
 
 ---
 
@@ -17,24 +23,29 @@ O projeto tem como objetivo praticar:
 - Maven
 - MySQL
 - JDBC
+- IntelliJ IDEA
 
 ---
 
-## 📂 Estrutura do projeto
+## 📂 Estrutura do projeto (MVP)
 
 <pre>
-src/main/java/com/jonathas
-├── database
-│   └── ConnectionFactory.java
-├── model
-│   ├── Produto.java
-│   └── Emitente.java
-│   └── Venda.java 
-├── repository
-│   ├── ProdutoRepository.java
-│   └── EmitenteRepository.java
-│   └── VendaRepository.java 
-└── Main.java
+ com.jonathas
+  ├── app
+  │   └── ConsoleApp.Java
+  ├── database
+  │   └── ConnectionFactory.java
+  ├── model
+  │   └──  Produto.java
+  │   └── ItemVenda.java
+  │   └── Venda.java 
+  ├── repository
+  │   └── ProdutoRepository.java
+  │   └── ItemVendaRepository.java
+  │   └── VendaRepository.java 
+  ├── service
+  │   └── VendaService.Java   
+  ├──  Main.java
 </pre>
 
 ---
@@ -42,20 +53,22 @@ src/main/java/com/jonathas
 ## 🚀 Funcionalidades implementadas
 
 - CRUD de Produto
-- CRUD de Emitente
+- Venda:
+  - Registrar vendas com múltiplos itens
+  - Transação única:
+    - insere venda
+    - insere N itens
+    - baixa estoque para cada item
+  - Listar vendas com itens + total
 - Integração com MySQL via JDBC
-- Registro de venda com:
-  - Validação de estoque
-  - Baixa automática na quantidade do produto
-  - Transação (commit/rollback)
 
 ---
 
 ## 📌 Status
 
-Em desenvolvimento 🚧
+✅ V2.0 concluída: service layer + venda com múltiplos itens
 
-Já dá pra cadastrar produto com quantidade e registrar vendas com baixa automática no estoque.
+### Próximos passos (V2):
 
-### Próximo passo:
-  - Fazer um menu no console.
+- V2.1: Cliente + contas a receber + pagamento
+- V2.2: Relátórios (período, produto, devedores)
