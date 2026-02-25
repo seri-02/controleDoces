@@ -3,19 +3,19 @@ package com.jonathas.app;
 import java.util.Scanner;
 import com.jonathas.model.Produto;
 import com.jonathas.repository.ProdutoRepository;
-import com.jonathas.database.ConnectionFactory;
-import com.jonathas.model.Venda;
-import com.jonathas.repository.VendaRepository;
-
+import com.jonathas.model.ItemVenda;
+import com.jonathas.service.VendaService;
 import java.math.BigDecimal;
-import java.sql.Connection;
+
 import java.sql.SQLException;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ConsoleApp {
 
     private final Scanner scanner = new Scanner(System.in);
     private final ProdutoRepository produtoRepository = new ProdutoRepository();
+    private final VendaService vendaService = new VendaService();
     private boolean running = true;
 
     public void start() {
@@ -93,7 +93,7 @@ public class ConsoleApp {
     }
 
     private String readString(String prompt) {
-        System.out.println(prompt);
+        System.out.print(prompt);
         return scanner.nextLine().trim();
     }
 
@@ -130,7 +130,7 @@ public class ConsoleApp {
     private BigDecimal readBigDecimal(String prompt) {
         while (true) {
             System.out.println(prompt);
-            String input = scanner.nextLine().trim().replace(",", ",");
+            String input = scanner.nextLine().trim().replace(",", ".");
             try {
                 BigDecimal value = new BigDecimal(input);
                 if (value.compareTo(BigDecimal.ZERO) < 0) {
@@ -148,31 +148,38 @@ public class ConsoleApp {
         System.out.println();
         System.out.println("============== Registrar venda ==============");
 
-        long produtoId = readInt("ID do produto: ");
-        int quantidade = readInt("Quantidade vendida: ");
-        BigDecimal valorUnitario = readBigDecimal("Valor unitário: ");
+        List<ItemVenda> itens = new ArrayList<>();
 
-        if (quantidade < 0) {
-            System.out.println("Quantidade precisa ser maior que 0.");
-            return;
+        while (true) {
+            long produtoId = readInt("Id do produto: ");
+            int quantidade = readInt("Quantidade vendida: ");
+            BigDecimal valorUnitario = readBigDecimal("Valor unitário: ");
+
+            if (quantidade <= 0) {
+                System.out.println("Quantidade precisa ser maior que 0.");
+                continue;
+            }
+
+            // Valida se produto existe via console
+            Produto produto = produtoRepository.buscarPorId(produtoId);
+            if (produto == null) {
+                System.out.println("Produto no encontrado.");
+                continue;
+            }
+
+            itens.add(new ItemVenda(produtoId, quantidade, valorUnitario));
+
+            String mais = readString("Adicionar mais itens? (s/n): ").toLowerCase();
+            if (!mais.equals("s")) {
+                break;
+            }
         }
 
-        // Verifica se produto existe
-        Produto produto  = produtoRepository.buscarPorId(produtoId);
-        if (produto == null) {
-            System.out.println("Produto não encontrado.");
-            return;
-        }
-
-        Venda venda = new Venda(produto, quantidade, valorUnitario, LocalDateTime.now());
-
-        try (Connection connection = ConnectionFactory.getConnection()) {
-            VendaRepository vendaRepository = new VendaRepository(connection);
-            vendaRepository.registrarVenda(venda);
-            System.out.println("Venda registrada com sucesso.");
-        } catch (SQLException e) {
-            // Estoque insuficiente ou Produto não encontrado
-            System.out.println("Erro ao registrar venda: " + e.getMessage());
+        try {
+            long vendaId = vendaService.registrarVenda(itens);
+            System.out.println("Venda registrada com sucesso. ID: " + vendaId);
+        } catch (Exception e) {
+            System.out.println("Erro ao registrar venda." + e.getMessage());
         }
     }
 
@@ -180,44 +187,40 @@ public class ConsoleApp {
         System.out.println();
         System.out.println("============== Listar vendas ==============");
 
-        try (Connection connection = ConnectionFactory.getConnection()) {
-
-            VendaRepository vendaRepository = new VendaRepository(connection);
-            var vendas = vendaRepository.listarTodas();
+        try {
+            var vendas = vendaService.listarVendasComItens();
 
             if (vendas.isEmpty()) {
                 System.out.println("Nenhum venda registrada.");
                 return;
             }
 
-            System.out.printf("%-5s %-10s %-8s %-12s %-12s%n",
-                    "ID", "ProdutoID", "Qtd", "V.Unit", "Total");
-            System.out.println("------------------------------------------------------------");
-
             BigDecimal totalGeral = BigDecimal.ZERO;
 
             for (var v : vendas) {
+                System.out.println("--------------------------------------------");
+                System.out.println("Venda ID: " + v.getId() + " | Data: " + v.getDataVenda());
+                System.out.printf("%-10s %-8s %-12s %-12s%n",
+                        "ProdutoID", "Qtd", "V.Unit", "Subtotal");
 
-                BigDecimal totalVenda =
-                        v.getValorUnitario().multiply(BigDecimal.valueOf(v.getQuantidade()));
+                for (var item : v.getItens()) {
+                    System.out.printf("%-10d %-8d %-12s %-12s%n",
+                            item.getProdutoId(),
+                            item.getQuantidade(),
+                            item.getValorUnitario(),
+                            item.getSubtotal()
+                    );
+                }
 
-                totalGeral = totalGeral.add(totalVenda);
-
-                System.out.printf("%-5d %-10d %-8d %-12s %-12s%n",
-                        v.getId(),
-                        v.getProduto().getId(),
-                        v.getQuantidade(),
-                        v.getValorUnitario(),
-                        totalVenda
-                );
+                System.out.println("Total da venda: " + v.getTotal());
+                totalGeral = totalGeral.add(v.getTotal());
             }
 
-            System.out.println("------------------------------------------------------------");
+            System.out.println("============================================");
             System.out.println("Total geral das vendas: " + totalGeral);
         } catch (SQLException e) {
-            System.out.println("Erro ao listar vendas: " + e.getMessage());
+            System.out.println("Erro ao listar vendas." + e.getMessage());
         }
+
     }
-
-
 }

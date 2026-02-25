@@ -91,4 +91,63 @@ public class ProdutoRepository {
         return null;
     }
 
+    // ===========================
+    // Métodos para transação (V2.0)
+    // ===========================
+
+    public Produto buscarPorId (Connection conn, Long id) throws SQLException {
+        String sql = "SELECT * FROM produto WHERE id = ?";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Produto produto = new Produto();
+                    produto.setId(rs.getLong("id"));
+                    produto.setNome(rs.getString("nome"));
+                    produto.setDescricao(rs.getString("descricao"));
+                    produto.setAtivo(rs.getBoolean("ativo"));
+                    produto.setQuantidade(rs.getInt("quantidade"));
+                    return produto;
+                }
+            }
+        }
+        return null;
+    }
+
+    public int buscarEstoqueAtual(Connection conn, Long produtoId) throws SQLException {
+        String sql = "SELECT quantidade FROM produto WHERE id = ?";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, produtoId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    throw new SQLException("Produto não encontrado (id=" + produtoId + ").");
+                }
+                return rs.getInt("quantidade");
+            }
+        }
+    }
+
+    public void baixarEstoque(Connection conn, Long produtoId, int quantidade) throws SQLException {
+            String sql = """
+            UPDATE produto
+            SET quantidade = quantidade - ?
+            WHERE id = ?
+        """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, quantidade);
+            stmt.setLong(2, produtoId);
+
+            int linhas = stmt.executeUpdate();
+            if (linhas == 0) {
+                throw new SQLException("Falha ao atualizar estoque do produto.");
+            }
+        }
+    }
+
+
 }
