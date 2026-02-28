@@ -15,6 +15,8 @@ Projeto console (CLI), desenvolvido em Java puro.
 - Regras de negócio
 - Boas práticas de versionamento
 
+⚠️ O sistema está em uso real para controle de vendas semanais.
+
 ---
 
 ## 🛠 Tecnologias utilizadas
@@ -27,48 +29,56 @@ Projeto console (CLI), desenvolvido em Java puro.
 
 ---
 
-## 📂 Estrutura do projeto (MVP)
+## 📂 Estrutura do projeto (V2.0.1)
 
 <pre>
  com.jonathas
-  ├── app
-  │   └── ConsoleApp.Java
-  ├── database
-  │   └── ConnectionFactory.java
-  ├── model
-  │   └──  Produto.java
-  │   └── ItemVenda.java
-  │   └── Venda.java 
-  ├── repository
-  │   └── ProdutoRepository.java
-  │   └── ItemVendaRepository.java
-  │   └── VendaRepository.java 
-  ├── service
-  │   └── VendaService.Java   
-  ├──  Main.java
+ ├── app
+ │   └── ConsoleApp.java
+ ├── database
+ │   └── ConnectionFactory.java
+ ├── model
+ │   ├── Produto.java
+ │   ├── Venda.java
+ │   └── ItemVenda.java
+ ├── repository
+ │   ├── ProdutoRepository.java
+ │   ├── VendaRepository.java
+ │   └── ItemVendaRepository.java
+ ├── service
+ │    └── VendaService.java
+ └── Main.java
 </pre>
 
 ---
 
 ## 🚀 Funcionalidades implementadas
 
-- CRUD de Produto
-- Venda:
-  - Registrar vendas com múltiplos itens
-  - Transação única:
-    - insere venda
-    - insere N itens
-    - baixa estoque para cada item
-  - Listar vendas com itens + total
-- Integração com MySQL via JDBC
+### 📦 Produto
+- Cadastrar produto
+- Editar produto
+- Inativar produto
+- Ajustar estoque manualmente
+- Definir preço padrão de venda
+- Definir custo unitário
+
+### 💰 Venda
+- Registrar venda com múltiplos itens
+- Sugestão automática de preço padrão
+- Transação única:
+  - insere venda
+  - insere N itens
+  - baixa estoque de cada item
+  - commit/rollback
+- Listar vendas com itens e total geral
 
 ---
 
 ## 📌 Status
 
-✅ V2.0 concluída: service layer + venda com múltiplos itens
+✅ V2.0.1 concluída: camada de serviço + venda com múltiplos itens + CRUD completo de produto
 
-### Próximos passos (V2):
+### Próximos passos:
 
 - V2.1: Cliente + contas a receber + pagamento
 - V2.2: Relátórios (período, produto, devedores)
