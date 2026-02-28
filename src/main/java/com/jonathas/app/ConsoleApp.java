@@ -36,6 +36,9 @@ public class ConsoleApp {
         System.out.println("2 - Listar produtos");
         System.out.println("3 - Registrar venda");
         System.out.println("4 - Listar vendas");
+        System.out.println("5 - Editar produto");
+        System.out.println("6 - Inativar produto");
+        System.out.println("7 - Ajustar estoque");
         System.out.println("0 - Sair");
         System.out.println("=============================================\n");
         System.out.println();
@@ -47,6 +50,9 @@ public class ConsoleApp {
             case 2 -> listarProdutos();
             case 3 -> registrarVenda();
             case 4 -> listarVendas();
+            case 5 -> editarProduto();
+            case 6 -> inativarProduto();
+            case 7 -> ajustarEstoque();
             case 0 -> running = false;
             default -> System.out.println("Opção inválida. Tente novamente.");
         }
@@ -71,6 +77,8 @@ public class ConsoleApp {
         String nome = readString("Nome do produto: ");
         String descricao = readString("Descrição (opcional): ");
         int quantidade = readInt("Quantidade inicial: ");
+        BigDecimal precoPadrao = readBigDecimal("Preço padrão de venda: ");
+        BigDecimal custoUnitario = readBigDecimal("Custo unitário (estimado): ");
 
         if (nome.isBlank()) {
             System.out.println("Digite um nome para que possa salvar o produto.");
@@ -80,12 +88,18 @@ public class ConsoleApp {
             System.out.println("Quantidade precisa ser maior que 0 para salvar o produto.");
             return;
         }
+        if (precoPadrao.compareTo(BigDecimal.ZERO) < 0 || custoUnitario.compareTo(BigDecimal.ZERO) < 0) {
+            System.out.println("Preço e custo não podem ser negativos.");
+            return;
+        }
 
         Produto produto = new Produto();
         produto.setNome(nome);
         produto.setDescricao(descricao.isBlank() ? null : descricao);
         produto.setQuantidade(quantidade);
         produto.setAtivo(true);
+        produto.setPrecoPadrao(precoPadrao);
+        produto.setCustoUnitario(custoUnitario);
 
         produtoRepository.salvar(produto);
 
@@ -144,6 +158,87 @@ public class ConsoleApp {
         }
     }
 
+    private void editarProduto() {
+        System.out.println();
+        System.out.println("============== Editar produto ==============");
+
+        long id = readInt("ID do produto: ");
+        Produto produto = produtoRepository.buscarPorId(id);
+
+        if (produto == null) {
+            System.out.println("Produto não encontrado");
+            return;
+        }
+
+        System.out.println("Deixe em branco para manter o valor atual.");
+
+        String nome = readString("Nome (" + produto.getNome() + "): ");
+        String descricao = readString("Descrição (" + (produto.getDescricao() == null ? "" : produto.getDescricao()) + "): ");
+
+        String ativoStr = readString("Ativo (s/n) (" + (produto.getAtivo() ? "s" : "n") + "): ").toLowerCase();
+        String precoStr = readString("Preço padrão (" + produto.getPrecoPadrao() + "): ").replace(",", ".");
+        String custoStr = readString("Custo unitário (" + produto.getCustoUnitario() + "): ").replace(",", ".");
+
+        if (!nome.isBlank()) produto.setNome(nome);
+        if (!descricao.isBlank()) produto.setDescricao(descricao);
+
+        if (ativoStr.equals("s")) produto.setAtivo(true);
+        else if (ativoStr.equals("n")) produto.setAtivo(false);
+
+        if (!precoStr.isBlank()) produto.setPrecoPadrao(new BigDecimal(precoStr));
+        if (!custoStr.isBlank()) produto.setCustoUnitario(new BigDecimal(custoStr));
+
+        produtoRepository.atualizar(produto);
+    }
+
+    private void inativarProduto() {
+        System.out.println();
+        System.out.println("============== Inativar produto ==============");
+
+        long id = readInt("ID do produto: ");
+        Produto produto = produtoRepository.buscarPorId(id);
+
+        if (produto == null) {
+            System.out.println("Produto não encontrado");
+            return;
+        }
+
+        String confirma = readString("Tem certeza que deseja inativar '" + produto.getNome() + "'? (s/n): ").toLowerCase();
+        if (!confirma.equals("s")) {
+            System.out.println("Operação cancelada.");
+            return;
+        }
+
+        produtoRepository.inativar(id);
+    }
+
+    private void ajustarEstoque() {
+        System.out.println();
+        System.out.println("============== Ajustar estoque ==============");
+
+        long id = readInt("ID do produto: ");
+        Produto produto = produtoRepository.buscarPorId(id);
+
+        if (produto == null) {
+            System.out.println("Produto não encontrado");
+            return;
+        }
+
+        System.out.println("Produto: " + produto.getNome() + " | Estoque atual: " + produto.getQuantidade());
+
+        String tipo = readString("Ajuste (+/-): ").trim();
+        int qtd = readInt("Quantidade: ");
+
+        if (qtd <= 0) {
+            System.out.println("Quantidade deve ser maior que 0");
+            return;
+        }
+
+        int delta = tipo.equals("-") ? -qtd : qtd;
+
+        produtoRepository.ajustarEstoque(id, delta);
+    }
+
     private void registrarVenda() {
         System.out.println();
         System.out.println("============== Registrar venda ==============");
@@ -165,6 +260,15 @@ public class ConsoleApp {
             if (produto == null) {
                 System.out.println("Produto no encontrado.");
                 continue;
+            }
+
+            String usarPadrao = readString(
+                    "Preço padrão é " + produto.getPrecoPadrao() + ". Usar? (s/n): ").toLowerCase();
+
+            if (usarPadrao.equals("s")) {
+                valorUnitario = produto.getPrecoPadrao();
+            } else {
+                valorUnitario = readBigDecimal("Valor unitário: ");
             }
 
             itens.add(new ItemVenda(produtoId, quantidade, valorUnitario));
