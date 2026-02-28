@@ -10,20 +10,28 @@ public class Venda {
 
     private Long id;
     private LocalDateTime dataVenda;
+
+    // V2.1
+    private Long clienteId;  // FK -> emitente.id
+    private String status;   // "PAGO" | "A_RECEBER"
+
     private List<ItemVenda> itens = new ArrayList<>();
 
     public Venda() {
         this.dataVenda = LocalDateTime.now();
+        this.status = "PAGO";
     }
 
     public Venda(Long id, LocalDateTime dataVenda) {
         this.id = id;
         this.dataVenda = dataVenda;
+        this.status = "PAGO";
     }
 
     // create sale in console
     public Venda(LocalDateTime dataVenda) {
         this.dataVenda = dataVenda;
+        this.status = "PAGO";
     }
 
     // Usefull rules
@@ -59,10 +67,25 @@ public class Venda {
         this.dataVenda = dataVenda;
     }
 
+    public Long getClienteId() {
+        return clienteId;
+    }
+
+    public void setClienteId(Long clienteId) {
+        this.clienteId = clienteId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     public List<ItemVenda> getItens() {
         return itens;
     }
-
     public void setItens(List<ItemVenda> itens) {
         this.itens = itens;
     }
@@ -71,9 +94,11 @@ public class Venda {
     public String toString() {
         return "Venda{" +
                 "id=" + id +
-                ", dataVenda=" + dataVenda +
-                ", itens=" + itens +
-                ", total=" + getTotal() +
+                ", dataVenda= " + dataVenda +
+                ", clienteId= " + clienteId +
+                ", status='" + status + '\'' +
+                ", itens= " + itens +
+                ", total= " + getTotal() +
                 '}';
     }
 }

@@ -63,24 +63,23 @@ public class EmitenteRepository {
     }
 
     public Emitente buscarPorId(Long id) {
-        String sql = "SELECT * FROM produto WHERE id = ?";
+        String sql = "SELECT * FROM emitente WHERE id = ?";
 
         try (Connection connection = ConnectionFactory.getConnection();
              PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setLong(1, id);
 
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                Emitente emitente = new Emitente();
-                emitente.setId(rs.getLong("id"));
-                emitente.setNome(rs.getString("nome"));
-                emitente.setDocumento(rs.getString("documento"));
-                emitente.setTipo(rs.getString("tipo"));
-                emitente.setAtivo(rs.getBoolean("ativo"));
-
-                return emitente;
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Emitente emitente = new Emitente();
+                    emitente.setId(rs.getLong("id"));
+                    emitente.setNome(rs.getString("nome"));
+                    emitente.setDocumento(rs.getString("documento"));
+                    emitente.setTipo(rs.getString("tipo"));
+                    emitente.setAtivo(rs.getBoolean("ativo"));
+                    return emitente;
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();

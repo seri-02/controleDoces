@@ -1,5 +1,8 @@
 package com.jonathas.app;
 
+/* FIXME: Ao selecionar a opção 3 (registrar a venda) ele pergunta o valor unitário mas depois em preço padrão sempre deixa como 0, então tem que ficar ajustando na mão dizendo
+//  que não aquele valor e dizer o valor do produto 2x.
+
 import java.util.Scanner;
 import com.jonathas.model.Produto;
 import com.jonathas.repository.ProdutoRepository;
@@ -39,6 +42,8 @@ public class ConsoleApp {
         System.out.println("5 - Editar produto");
         System.out.println("6 - Inativar produto");
         System.out.println("7 - Ajustar estoque");
+        System.out.println("8 - Registrar pagamento");
+        System.out.println("9 - Listar vendas a receber");
         System.out.println("0 - Sair");
         System.out.println("=============================================\n");
         System.out.println();
@@ -53,6 +58,8 @@ public class ConsoleApp {
             case 5 -> editarProduto();
             case 6 -> inativarProduto();
             case 7 -> ajustarEstoque();
+            case 8 -> registrarPagamento();
+            case 9 -> listarVendasAReceber();
             case 0 -> running = false;
             default -> System.out.println("Opção inválida. Tente novamente.");
         }
@@ -279,8 +286,14 @@ public class ConsoleApp {
             }
         }
 
+        long clienteInput = readInt("ID do cliente (0 para nenhum): ");
+        Long clienteId = (clienteInput == 0) ? null : clienteInput;
+
+        String pago = readString("Venda foi paga? (s/n): ").toLowerCase();
+        String status = pago.equals("s") ? "PAGO" : "A_RECEBER";
+
         try {
-            long vendaId = vendaService.registrarVenda(itens);
+            long vendaId = vendaService.registrarVenda(itens, clienteId, status);
             System.out.println("Venda registrada com sucesso. ID: " + vendaId);
         } catch (Exception e) {
             System.out.println("Erro ao registrar venda." + e.getMessage());
@@ -326,5 +339,62 @@ public class ConsoleApp {
             System.out.println("Erro ao listar vendas." + e.getMessage());
         }
 
+    }
+
+    private void registrarPagamento() {
+        System.out.println();
+        System.out.println("============== Registrar pagamento ==============");
+
+        long vendaId = readInt("ID da venda para quitar: ");
+
+        try {
+            vendaService.registrarPagamentoIntegral(vendaId);
+            System.out.println("Pagamento registrado e venda marcada como PAGO.");
+        } catch (SQLException e) {
+            System.out.println("Erro ao registrar pagamento." + e.getMessage());
+        }
+    }
+
+    private void listarVendasAReceber() {
+        System.out.println();
+        System.out.println("============== Listar pagamento ==============");
+
+        try {
+            var vendas =  vendaService.listarVendasAReceberComItens();
+
+            if (vendas.isEmpty()) {
+                System.out.println("Nenhum venda a receber no momento.");
+                return;
+            }
+
+            BigDecimal totalAReceber = BigDecimal.ZERO;
+
+            for (var v : vendas) {
+                System.out.println("--------------------------------------------");
+                System.out.println("Venda ID: " + v.getId() +
+                        " | Data: " + v.getDataVenda() +
+                        " | ClienteID: " + (v.getClienteId() == null ? "N/A" : v.getClienteId()));
+
+                System.out.printf("%-10s %-8s %-12s %-12s%n",
+                        "ProdutoID", "Qtd", "V.Unit", "Subtotal");
+
+                for (var item : v.getItens()) {
+                    System.out.printf("%-10d %-8d %-12s %-12s%n",
+                            item.getProdutoId(),
+                            item.getQuantidade(),
+                            item.getValorUnitario(),
+                            item.getSubtotal()
+                    );
+                }
+
+                System.out.println("Total da venda: " + v.getTotal());
+                totalAReceber = totalAReceber.add(v.getTotal());
+            }
+
+            System.out.println("============================================");
+            System.out.println("TOTAL A RECEBER: " + totalAReceber);
+        } catch (SQLException e) {
+            System.out.println("Erro ao listar vendas a receber: " + e.getMessage());
+        }
     }
 }
