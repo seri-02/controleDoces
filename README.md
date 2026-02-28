@@ -1,13 +1,21 @@
-# Controle de Doces
+# Controle de Doces 📦
 
-Sistema de controle de produtos desenvolvido em Java utilizando Maven, JDBC e MySQL.
+Sistema real de gerenciamento de vendas e controle de estoque para doces, desenvolvido como projeto pessoal para aplicar e aprofundar conhecimentos em Java, JDBC e MySQL.
 
-O projeto tem como objetivo praticar:
+O sistema é utilizado para registrar vendas reais e controlar estoque de produção.
+
+Projeto console (CLI), desenvolvido em Java puro.
+
+## 🎯 Objetivo
 
 - Arquitetura em camadas
+- Separação de responsabilidades
 - Persistência com JDBC
-- Organização de projeto Maven
-- Versionamento com Git
+- Modelagem relacional
+- Regras de negócio
+- Boas práticas de versionamento
+
+⚠️ O sistema está em uso real para controle de vendas semanais.
 
 ---
 
@@ -17,45 +25,60 @@ O projeto tem como objetivo praticar:
 - Maven
 - MySQL
 - JDBC
+- IntelliJ IDEA
 
 ---
 
-## 📂 Estrutura do projeto
+## 📂 Estrutura do projeto (V2.0.1)
 
 <pre>
-src/main/java/com/jonathas
-├── database
-│   └── ConnectionFactory.java
-├── model
-│   ├── Produto.java
-│   └── Emitente.java
-│   └── Venda.java 
-├── repository
-│   ├── ProdutoRepository.java
-│   └── EmitenteRepository.java
-│   └── VendaRepository.java 
-└── Main.java
+ com.jonathas
+ ├── app
+ │   └── ConsoleApp.java
+ ├── database
+ │   └── ConnectionFactory.java
+ ├── model
+ │   ├── Produto.java
+ │   ├── Venda.java
+ │   └── ItemVenda.java
+ ├── repository
+ │   ├── ProdutoRepository.java
+ │   ├── VendaRepository.java
+ │   └── ItemVendaRepository.java
+ ├── service
+ │    └── VendaService.java
+ └── Main.java
 </pre>
 
 ---
 
 ## 🚀 Funcionalidades implementadas
 
-- CRUD de Produto
-- CRUD de Emitente
-- Integração com MySQL via JDBC
-- Registro de venda com:
-  - Validação de estoque
-  - Baixa automática na quantidade do produto
-  - Transação (commit/rollback)
+### 📦 Produto
+- Cadastrar produto
+- Editar produto
+- Inativar produto
+- Ajustar estoque manualmente
+- Definir preço padrão de venda
+- Definir custo unitário
+
+### 💰 Venda
+- Registrar venda com múltiplos itens
+- Sugestão automática de preço padrão
+- Transação única:
+  - insere venda
+  - insere N itens
+  - baixa estoque de cada item
+  - commit/rollback
+- Listar vendas com itens e total geral
 
 ---
 
 ## 📌 Status
 
-Em desenvolvimento 🚧
+✅ V2.0.1 concluída: camada de serviço + venda com múltiplos itens + CRUD completo de produto
 
-Já dá pra cadastrar produto com quantidade e registrar vendas com baixa automática no estoque.
+### Próximos passos:
 
-### Próximo passo:
-  - Fazer um menu no console.
+- V2.1: Cliente + contas a receber + pagamento
+- V2.2: Relátórios (período, produto, devedores)

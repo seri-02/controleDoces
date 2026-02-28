@@ -42,8 +42,6 @@ public class ConsoleApp {
         System.out.println("5 - Editar produto");
         System.out.println("6 - Inativar produto");
         System.out.println("7 - Ajustar estoque");
-        System.out.println("8 - Registrar pagamento");
-        System.out.println("9 - Listar vendas a receber");
         System.out.println("0 - Sair");
         System.out.println("=============================================\n");
         System.out.println();
@@ -58,8 +56,6 @@ public class ConsoleApp {
             case 5 -> editarProduto();
             case 6 -> inativarProduto();
             case 7 -> ajustarEstoque();
-            case 8 -> registrarPagamento();
-            case 9 -> listarVendasAReceber();
             case 0 -> running = false;
             default -> System.out.println("Opção inválida. Tente novamente.");
         }
