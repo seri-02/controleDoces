@@ -1,64 +1,54 @@
 package com.jonathas.model;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Venda {
 
     private Long id;
-    private Produto produto;
-    private Integer quantidade;
-    private BigDecimal valorUnitario;
     private LocalDateTime dataVenda;
+    private List<ItemVenda> itens = new ArrayList<>();
 
     public Venda() {
+        this.dataVenda = LocalDateTime.now();
     }
 
-    public Venda(Long id, Produto produto, Integer quantidade, BigDecimal valorUnitario, LocalDateTime dataVenda) {
+    public Venda(Long id, LocalDateTime dataVenda) {
         this.id = id;
-        this.produto = produto;
-        this.quantidade = quantidade;
-        this.valorUnitario = valorUnitario;
         this.dataVenda = dataVenda;
     }
 
-    public Venda(Produto produto, Integer quantidade, BigDecimal valorUnitario, LocalDateTime dataVenda) {
-        this.produto = produto;
-        this.quantidade = quantidade;
-        this.valorUnitario = valorUnitario;
+    // create sale in console
+    public Venda(LocalDateTime dataVenda) {
         this.dataVenda = dataVenda;
     }
 
+    // Usefull rules
+    public void adicionarItem(ItemVenda item) {
+        if (item == null) return;
+        this.itens.add(item);
+    }
+
+    public BigDecimal getTotal() {
+        BigDecimal total = BigDecimal.ZERO;
+        for (ItemVenda item : itens) {
+            if (item != null) {
+                total = total.add(item.getSubtotal());
+            }
+        }
+        return total.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    // Getter n Setter
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Produto getProduto() {
-        return produto;
-    }
-
-    public void setProduto(Produto produto) {
-        this.produto = produto;
-    }
-
-    public Integer getQuantidade() {
-        return quantidade;
-    }
-
-    public void setQuantidade(Integer quantidade) {
-        this.quantidade = quantidade;
-    }
-
-    public BigDecimal getValorUnitario() {
-        return valorUnitario;
-    }
-
-    public void setValorUnitario(BigDecimal valorUnitario) {
-        this.valorUnitario = valorUnitario;
     }
 
     public LocalDateTime getDataVenda() {
@@ -69,15 +59,21 @@ public class Venda {
         this.dataVenda = dataVenda;
     }
 
+    public List<ItemVenda> getItens() {
+        return itens;
+    }
+
+    public void setItens(List<ItemVenda> itens) {
+        this.itens = itens;
+    }
+
     @Override
     public String toString() {
         return "Venda{" +
                 "id=" + id +
-                ", produto='" + produto + '\'' +
-                ", quantidade='" + quantidade + '\'' +
-                ", valorTotal='" + valorUnitario + '\'' +
-                ", dataVenda='" + dataVenda +
+                ", dataVenda=" + dataVenda +
+                ", itens=" + itens +
+                ", total=" + getTotal() +
                 '}';
     }
-
 }
