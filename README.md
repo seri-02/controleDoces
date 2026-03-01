@@ -39,12 +39,16 @@ Projeto console (CLI), desenvolvido em Java puro.
  │   └── ConnectionFactory.java
  ├── model
  │   ├── Produto.java
+ │   ├── Emitente.java 
  │   ├── Venda.java
- │   └── ItemVenda.java
+ │   ├── ItemVenda.java
+ │   └── Pagamento.java
  ├── repository
  │   ├── ProdutoRepository.java
+ │   ├── EmitenteRepository.java 
  │   ├── VendaRepository.java
- │   └── ItemVendaRepository.java
+ │   ├── ItemVendaRepository.java
+ │   └── PagamentoRepository.java
  ├── service
  │    └── VendaService.java
  └── Main.java
@@ -63,22 +67,27 @@ Projeto console (CLI), desenvolvido em Java puro.
 - Definir custo unitário
 
 ### 💰 Venda
-- Registrar venda com múltiplos itens
-- Sugestão automática de preço padrão
+- Registrar vendas com múltiplos itens
+- Suporte a cliente (Emitente)
+- Status da venda:
+  - PAGO
+  - A_RECEBER (fiado)
+- Registro automático de pagamento para vendas pagas
+- Registro manual de pagamento integral
+- Listagem de vendas a receber (fiado)
 - Transação única:
   - insere venda
   - insere N itens
-  - baixa estoque de cada item
-  - commit/rollback
-- Listar vendas com itens e total geral
+  - baixa estoque
+  - registra pagamento (quando aplicável)
 
 ---
 
 ## 📌 Status
 
-✅ V2.0.1 concluída: camada de serviço + venda com múltiplos itens + CRUD completo de produto
+✅ V2.1: Controle de fiado (A_RECEBER) + Pagamento Integral + Listagem de vendas pendentes
 
 ### Próximos passos:
 
-- V2.1: Cliente + contas a receber + pagamento
+- V2.1.1: Cadastro e listagem de clientes + Permitir pagamento parcial
 - V2.2: Relátórios (período, produto, devedores)
