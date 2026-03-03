@@ -1,12 +1,11 @@
 package com.jonathas.app;
 
-/* FIXME: Ao selecionar a opção 3 (registrar a venda) ele pergunta o valor unitário mas depois em preço padrão sempre deixa como 0, então tem que ficar ajustando na mão dizendo
-//  que não aquele valor e dizer o valor do produto 2x.
-
 import java.util.Scanner;
-import com.jonathas.model.Produto;
+import com.jonathas.repository.EmitenteRepository;
 import com.jonathas.repository.ProdutoRepository;
+import com.jonathas.model.Produto;
 import com.jonathas.model.ItemVenda;
+import com.jonathas.model.Emitente;
 import com.jonathas.service.VendaService;
 import java.math.BigDecimal;
 
@@ -18,6 +17,7 @@ public class ConsoleApp {
 
     private final Scanner scanner = new Scanner(System.in);
     private final ProdutoRepository produtoRepository = new ProdutoRepository();
+    private final EmitenteRepository emitterRepository = new EmitenteRepository();
     private final VendaService vendaService = new VendaService();
     private boolean running = true;
 
@@ -42,6 +42,10 @@ public class ConsoleApp {
         System.out.println("5 - Editar produto");
         System.out.println("6 - Inativar produto");
         System.out.println("7 - Ajustar estoque");
+        System.out.println("8 - Registrar pagamento");
+        System.out.println("9 - Listar pagamento");
+        System.out.println("10 - Cadastrar cliente");
+        System.out.println("11 - Listar clientes");
         System.out.println("0 - Sair");
         System.out.println("=============================================\n");
         System.out.println();
@@ -56,6 +60,10 @@ public class ConsoleApp {
             case 5 -> editarProduto();
             case 6 -> inativarProduto();
             case 7 -> ajustarEstoque();
+            case 8 -> registrarPagamento();
+            case 9 -> listarVendasAReceber();
+            case 10 -> cadastrarCliente();
+            case 11 -> listarClientes();
             case 0 -> running = false;
             default -> System.out.println("Opção inválida. Tente novamente.");
         }
@@ -282,11 +290,23 @@ public class ConsoleApp {
             }
         }
 
-        long clienteInput = readInt("ID do cliente (0 para nenhum): ");
-        Long clienteId = (clienteInput == 0) ? null : clienteInput;
-
         String pago = readString("Venda foi paga? (s/n): ").toLowerCase();
         String status = pago.equals("s") ? "PAGO" : "A_RECEBER";
+
+        Long clienteId = null;
+
+        if (status.equals("A_RECEBER")) {
+            clienteId = selecionarClientePorNumero();
+            if (clienteId == null) {
+                System.out.println("Venda fiado exige um cliente. Cadastre ou selecione um cliente para prosseguir.");
+                return;
+            }
+        } else {
+            String vincular = readString("Deseja vincular um cliente? (s/n): ").toLowerCase();
+            if (vincular.equals("s")) {
+                clienteId = selecionarClientePorNumero();
+            }
+        }
 
         try {
             long vendaId = vendaService.registrarVenda(itens, clienteId, status);
@@ -392,5 +412,90 @@ public class ConsoleApp {
         } catch (SQLException e) {
             System.out.println("Erro ao listar vendas a receber: " + e.getMessage());
         }
+    }
+
+    private void cadastrarCliente() {
+        System.out.println();
+        System.out.println("============== Cadastrar cliente ==============");
+
+        String nome = readString("Nome do cliente: ");
+        if (nome.isBlank()) {
+            System.out.println("Nome é obrigatório");
+            return;
+        }
+
+        String documento = readString("Documento (opcional): ");
+        String tipo = "CLIENTE";
+
+        Emitente cliente = new Emitente();
+        cliente.setNome(nome);
+        cliente.setDocumento(documento.isBlank() ? null : documento);
+        cliente.setTipo(tipo);
+        cliente.setAtivo(true);
+
+        emitterRepository.salvar(cliente);
+        System.out.println("Cliente cadastrado. ID: " + cliente.getId());
+    }
+
+    private void listarClientes() {
+        System.out.println();
+        System.out.println("============== Listar clientes ==============");
+
+        var clientes = emitterRepository.listarClientesAtivos();
+
+        if (clientes.isEmpty()) {
+            System.out.println("Nenhum cliente encontrado.");
+            return;
+        }
+
+        System.out.printf("%-5s %-30s %-15s%n", "ID", "Nome", "Documento");
+        System.out.println("-----------------------------------------------------");
+
+        for (var c : clientes) {
+            System.out.printf("%-5d %-30s %-15s%n",
+                    c.getId(),
+                    trunc(c.getNome(), 30),
+                    c.getDocumento() == null ? "" : trunc(c.getDocumento(), 15));
+        }
+    }
+
+    private Long selecionarClientePorNumero() {
+        System.out.println();
+        System.out.println("============== Selecionar cliente ==============");
+
+        String termo = readString("Buscar por nome (Enter para listar todos): ");
+
+        // TODO: Verificar depois
+        var clientes = termo.isBlank()
+                ? emitterRepository.listarClientesAtivos()
+                : emitterRepository.buscarClientesPorNome(termo);
+
+        if (clientes.isEmpty()) {
+            System.out.println("Nenhum cliente encontrado.");
+            return null;
+        }
+
+        for (int i = 0; i < clientes.size(); i++) {
+            var c = clientes.get(i);
+            System.out.printf("%d) %s %s%n",
+                    (i + 1),
+                    c.getNome(),
+                    c.getDocumento() == null ? "" : ("- " + c.getDocumento()));
+        }
+
+        while (true) {
+            int escolha = readInt("Escolha um número (0 para cancelar): ");
+
+            if (escolha == 0) {
+                return null;
+            }
+
+            if (escolha >= 1 && escolha <= clientes.size()) {
+                return clientes.get(escolha - 1).getId();
+            }
+
+            System.out.println("Opção inválida.Digite um número entre 1 e " + clientes.size() + " (ou 0 para cancelar).");
+        }
+
     }
 }

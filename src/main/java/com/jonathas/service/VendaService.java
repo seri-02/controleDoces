@@ -52,8 +52,9 @@ public class VendaService {
                     validarItem(conn, item);
                 }
 
+                // Removido pois estava dando duplicidade em selecionar cliente
                 // Valida cliente se vier preenchido
-                if (clienteId != null) {
+                /*if (clienteId != null) {
                     //Valida se existe na tabela emitente
                     try (var stmt = conn.prepareStatement("SELECT id FROM emitente WHERE id = ? AND ativo = 1")) {
                         stmt.setLong(1, clienteId);
@@ -63,7 +64,7 @@ public class VendaService {
                             }
                         }
                     }
-                }
+                }*/
 
                 // Insere cabeçalho
                 Venda venda = new Venda(LocalDateTime.now());

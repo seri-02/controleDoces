@@ -87,4 +87,69 @@ public class EmitenteRepository {
 
         return null;
     }
+
+    public List<Emitente> listarClientesAtivos() {
+        String sql = """
+            SELECT id, nome, documento, tipo, ativo
+            FROM emitente
+            WHERE ativo = 1 AND tipo IN ('CLIENTE', 'AMBOS')
+            ORDER BY nome ASC
+        """;
+
+        List<Emitente> clientes = new ArrayList<>();
+
+        try (Connection connection = ConnectionFactory.getConnection();
+            PreparedStatement stmt = connection.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                Emitente e = new Emitente();
+                e.setId(rs.getLong("id"));
+                e.setNome(rs.getString("nome"));
+                e.setDocumento(rs.getString("documento"));
+                e.setTipo(rs.getString("tipo"));
+                e.setAtivo(rs.getBoolean("ativo"));
+                clientes.add(e);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return clientes;
+    }
+
+    public List<Emitente> buscarClientesPorNome(String termo) {
+        String sql = """
+            SELECT id, nome, documento, tipo, ativo
+            FROM emitente
+            WHERE ativo = 1
+              AND tipo IN ('CLIENTE', 'AMBOS')
+              AND nome LIKE ?
+            ORDER BY nome ASC
+        """;
+
+        List<Emitente> clientes = new ArrayList<>();
+        String like = "%" + termo + "%";
+
+        try (Connection connection = ConnectionFactory.getConnection();
+            PreparedStatement stmt = connection.prepareStatement(sql)) {
+
+            stmt.setString(1, like);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Emitente e = new Emitente();
+                    e.setId(rs.getLong("id"));
+                    e.setNome(rs.getString("nome"));
+                    e.setDocumento(rs.getString("documento"));
+                    e.setTipo(rs.getString("tipo"));
+                    e.setAtivo(rs.getBoolean("ativo"));
+                    clientes.add(e);
+                }
+            }
+        } catch (SQLException e) {
+                e.printStackTrace();
+        }
+
+        return clientes;
+    }
 }
