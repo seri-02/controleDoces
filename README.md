@@ -65,29 +65,50 @@ Projeto console (CLI), desenvolvido em Java puro.
 - Ajustar estoque manualmente
 - Definir preço padrão de venda
 - Definir custo unitário
+- Controle de estoque automático via venda
+
+--
+
+### 👤 Cliente (Emitente)
+- Cadastro de cliente
+- Listagem de clientes ativos
+- Busca por nome
+- Seleção de cliente por lista numerada
+
+--
 
 ### 💰 Venda
 - Registrar vendas com múltiplos itens
+- Seleção de produto por ID
 - Suporte a cliente (Emitente)
 - Status da venda:
   - PAGO
   - A_RECEBER (fiado)
 - Registro automático de pagamento para vendas pagas
 - Registro manual de pagamento integral
-- Listagem de vendas a receber (fiado)
-- Transação única:
+- Listagem de vendas a receber (controle de fiado)
+- Cálculo automático de total da venda
+
+--
+
+### 🔄 Regras de Negócio
+- Venda deve conter ao menos 1 item
+- Validação de estoque antes da confirmação
+- Transação única por venda:
   - insere venda
   - insere N itens
   - baixa estoque
   - registra pagamento (quando aplicável)
+  - commit/rollback automático
+- Venda fiado exige cliente válido
 
 ---
 
 ## 📌 Status
 
-✅ V2.1: Controle de fiado (A_RECEBER) + Pagamento Integral + Listagem de vendas pendentes
+✅ V2.1.1: Cadastro e listagem de clientes no fluxo de venda
 
 ### Próximos passos:
 
-- V2.1.1: Cadastro e listagem de clientes + Permitir pagamento parcial
-- V2.2: Relátórios (período, produto, devedores)
+- V2.1.2: Cliente obrigatório em toda venda + seleção por nome/lista (sem ID) + listagens mais user friendly
+- V2.2: Relátórios (período, produto, devedores) + Permitir pagamento parcial
