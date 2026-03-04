@@ -97,10 +97,6 @@ public class ProdutoRepository {
         return null;
     }
 
-    // ===========================
-    // Métodos para transação (V2.0)
-    // ===========================
-
     public Produto buscarPorId (Connection conn, Long id) throws SQLException {
         String sql = "SELECT * FROM produto WHERE id = ?";
 
@@ -253,6 +249,42 @@ public class ProdutoRepository {
             System.out.println("Erro ao ajustar estoque: ");
             e.printStackTrace();
         }
+    }
+
+    public List<Produto> buscarAtivosPorNome(String termo) {
+        String sql = """
+            SELECT id, nome, descricao, ativo, quantidade, preco_padrao, custo_unitario
+            FROM produto
+            WHERE ativo = 1 AND nome LIKE ?
+            ORDER BY nome ASC
+        """;
+
+        List<Produto> produtos = new ArrayList<>();
+        String like = "%" + termo + "%";
+
+        try (Connection connection = ConnectionFactory.getConnection();
+            PreparedStatement stmt = connection.prepareStatement(sql)) {
+
+            stmt.setString(1, like);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Produto p = new Produto();
+                    p.setId(rs.getLong("id"));
+                    p.setNome(rs.getString("nome"));
+                    p.setDescricao(rs.getString("descricao"));
+                    p.setAtivo(rs.getBoolean("ativo"));
+                    p.setQuantidade(rs.getInt("quantidade"));
+                    p.setPrecoPadrao(rs.getBigDecimal("preco_padrao"));
+                    p.setCustoUnitario(rs.getBigDecimal("custo_unitario"));
+                    produtos.add(p);
+                }
+            }
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return produtos;
     }
 
 

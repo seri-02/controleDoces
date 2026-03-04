@@ -1,6 +1,8 @@
 package com.jonathas.app;
 
 import java.util.Scanner;
+
+import com.jonathas.model.Venda;
 import com.jonathas.repository.EmitenteRepository;
 import com.jonathas.repository.ProdutoRepository;
 import com.jonathas.model.Produto;
@@ -257,21 +259,21 @@ public class ConsoleApp {
         List<ItemVenda> itens = new ArrayList<>();
 
         while (true) {
-            long produtoId = readInt("Id do produto: ");
+
+            Produto produto = selecionarProdutoPorNumero();
+            if (produto == null) {
+                System.out.println("Seleção de produto cancelada.");
+                return;
+            }
+
             int quantidade = readInt("Quantidade vendida: ");
-            BigDecimal valorUnitario = readBigDecimal("Valor unitário: ");
 
             if (quantidade <= 0) {
                 System.out.println("Quantidade precisa ser maior que 0.");
                 continue;
             }
 
-            // Valida se produto existe via console
-            Produto produto = produtoRepository.buscarPorId(produtoId);
-            if (produto == null) {
-                System.out.println("Produto no encontrado.");
-                continue;
-            }
+            BigDecimal valorUnitario;
 
             String usarPadrao = readString(
                     "Preço padrão é " + produto.getPrecoPadrao() + ". Usar? (s/n): ").toLowerCase();
@@ -282,7 +284,7 @@ public class ConsoleApp {
                 valorUnitario = readBigDecimal("Valor unitário: ");
             }
 
-            itens.add(new ItemVenda(produtoId, quantidade, valorUnitario));
+            itens.add(new ItemVenda(produto.getId(), quantidade, valorUnitario));
 
             String mais = readString("Adicionar mais itens? (s/n): ").toLowerCase();
             if (!mais.equals("s")) {
@@ -293,19 +295,10 @@ public class ConsoleApp {
         String pago = readString("Venda foi paga? (s/n): ").toLowerCase();
         String status = pago.equals("s") ? "PAGO" : "A_RECEBER";
 
-        Long clienteId = null;
-
-        if (status.equals("A_RECEBER")) {
-            clienteId = selecionarClientePorNumero();
+        Long clienteId = selecionarClientePorNumero();
             if (clienteId == null) {
                 System.out.println("Venda fiado exige um cliente. Cadastre ou selecione um cliente para prosseguir.");
                 return;
-            }
-        } else {
-            String vincular = readString("Deseja vincular um cliente? (s/n): ").toLowerCase();
-            if (vincular.equals("s")) {
-                clienteId = selecionarClientePorNumero();
-            }
         }
 
         try {
@@ -328,17 +321,20 @@ public class ConsoleApp {
                 return;
             }
 
-            BigDecimal totalGeral = BigDecimal.ZERO;
+            java.math.BigDecimal totalGeral = java.math.BigDecimal.ZERO;
 
             for (var v : vendas) {
                 System.out.println("--------------------------------------------");
-                System.out.println("Venda ID: " + v.getId() + " | Data: " + v.getDataVenda());
-                System.out.printf("%-10s %-8s %-12s %-12s%n",
-                        "ProdutoID", "Qtd", "V.Unit", "Subtotal");
+                System.out.println("Venda #" + v.getId()
+                        + " | Data: " + v.getDataVenda()
+                        + " | Cliente: " + (v.getClienteNome() == null ? "(sem nome)" : v.getClienteNome())
+                        + " | Status: " + v.getStatus());
+
+                System.out.printf("%-25s %-6s %-12s %-12s%n", "Produto", "Qtd", "V.Unit", "Subtotal");
 
                 for (var item : v.getItens()) {
-                    System.out.printf("%-10d %-8d %-12s %-12s%n",
-                            item.getProdutoId(),
+                    System.out.printf("%-25s %-6d %-12s %-12s%n",
+                            trunc(item.getProdutoNome(), 25),
                             item.getQuantidade(),
                             item.getValorUnitario(),
                             item.getSubtotal()
@@ -349,8 +345,8 @@ public class ConsoleApp {
                 totalGeral = totalGeral.add(v.getTotal());
             }
 
-            System.out.println("============================================");
-            System.out.println("Total geral das vendas: " + totalGeral);
+            System.out.println("------------------------------------------------------------");
+            System.out.println("TOTAL GERAL: " + totalGeral);
         } catch (SQLException e) {
             System.out.println("Erro ao listar vendas." + e.getMessage());
         }
@@ -373,7 +369,7 @@ public class ConsoleApp {
 
     private void listarVendasAReceber() {
         System.out.println();
-        System.out.println("============== Listar pagamento ==============");
+        System.out.println("============== Vendas a Receber ==============");
 
         try {
             var vendas =  vendaService.listarVendasAReceberComItens();
@@ -383,33 +379,62 @@ public class ConsoleApp {
                 return;
             }
 
-            BigDecimal totalAReceber = BigDecimal.ZERO;
+            // Agrupar por cliente
+            java.util.Map<String, java.util.List<Venda>> porCliente = new java.util.LinkedHashMap<>();
 
             for (var v : vendas) {
-                System.out.println("--------------------------------------------");
-                System.out.println("Venda ID: " + v.getId() +
-                        " | Data: " + v.getDataVenda() +
-                        " | ClienteID: " + (v.getClienteId() == null ? "N/A" : v.getClienteId()));
-
-                System.out.printf("%-10s %-8s %-12s %-12s%n",
-                        "ProdutoID", "Qtd", "V.Unit", "Subtotal");
-
-                for (var item : v.getItens()) {
-                    System.out.printf("%-10d %-8d %-12s %-12s%n",
-                            item.getProdutoId(),
-                            item.getQuantidade(),
-                            item.getValorUnitario(),
-                            item.getSubtotal()
-                    );
-                }
-
-                System.out.println("Total da venda: " + v.getTotal());
-                totalAReceber = totalAReceber.add(v.getTotal());
+                porCliente
+                        .computeIfAbsent(v.getClienteNome(), k -> new java.util.ArrayList<>())
+                        .add(v);
             }
 
-            System.out.println("============================================");
-            System.out.println("TOTAL A RECEBER: " + totalAReceber);
-        } catch (SQLException e) {
+            BigDecimal totalGeral = BigDecimal.ZERO;
+
+            for (var entry : porCliente.entrySet()) {
+
+                String clienteNome = entry.getKey();
+                var vendaDoCliente = entry.getValue();
+
+                System.out.println();
+                System.out.println("============================================================");
+                System.out.println("CLIENTE: " + trunc(clienteNome, 40));
+                System.out.println("============================================================");
+
+                BigDecimal totalCliente = BigDecimal.ZERO;
+
+                for (var v : vendaDoCliente) {
+
+                    System.out.println("------------------------------------------------------------");
+                    System.out.println("Venda #" + v.getId()
+                            + " | Data: " + v.getDataVenda());
+
+                    System.out.printf("%-25s %-6s %-12s %-12s%n",
+                            "Produto", "Qtd", "V.Unit", "Subtotal");
+
+                    for (var item : v.getItens()) {
+                        System.out.printf("%-25s %-6d %-12s %-12s%n",
+                                trunc(item.getProdutoNome(), 25),
+                                item.getQuantidade(),
+                                item.getValorUnitario(),
+                                item.getSubtotal()
+                        );
+                    }
+
+                    System.out.println("Total da venda: " + v.getTotal());
+                    totalCliente = totalCliente.add(v.getTotal());
+                }
+
+                System.out.println("------------------------------------------------------------");
+                System.out.println("TOTAL DEVIDO POR " + clienteNome.toUpperCase() + ": " + totalCliente);
+
+                totalGeral = totalGeral.add(totalCliente);
+            }
+
+            System.out.println();
+            System.out.println("============================================================");
+            System.out.println("TOTAL GERAL A RECEBER: " + totalGeral);
+            System.out.println("============================================================");
+        }catch (SQLException e) {
             System.out.println("Erro ao listar vendas a receber: " + e.getMessage());
         }
     }
@@ -497,5 +522,46 @@ public class ConsoleApp {
             System.out.println("Opção inválida.Digite um número entre 1 e " + clientes.size() + " (ou 0 para cancelar).");
         }
 
+    }
+
+    private Produto selecionarProdutoPorNumero() {
+        System.out.println();
+        System.out.println("============== Selecionar produto ==============");
+
+        String termo = readString("Buscar produto por nome: ");
+        if (termo.isBlank()) {
+            System.out.println("Digite ao menos  uma parte do produto.");
+            return null;
+        }
+
+        var produtos = produtoRepository.buscarAtivosPorNome(termo);
+
+        if (produtos.isEmpty()) {
+            System.out.println("Nenhum produto encontrado para: " + termo);
+            return null;
+        }
+
+        for (int i = 0; i < produtos.size(); i++) {
+            var p = produtos.get(i);
+            System.out.printf(
+                    "%d) %s | estoque: %d | preço padrão: %s%n",
+                    (i + 1),
+                    p.getNome(),
+                    p.getQuantidade(),
+                    p.getPrecoPadrao()
+            );
+        }
+
+        while (true) {
+            int escolha = readInt("Escolha um produto (0 para cancelar): ");
+
+            if (escolha == 0) return null;
+
+            if (escolha >= 1 && escolha <= produtos.size()) {
+                return produtos.get(escolha - 1);
+            }
+
+            System.out.println("Opção inválida. Digite entre 1 e " + produtos.size() + " (ou 0 para cancelar).");
+        }
     }
 }
