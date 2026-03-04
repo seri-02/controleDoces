@@ -86,7 +86,9 @@ Projeto console (CLI), desenvolvido em Java puro.
   - A_RECEBER (fiado)
 - Registro automático de pagamento para vendas pagas
 - Registro manual de pagamento integral
-- Listagem de vendas a receber (controle de fiado)
+- Listagens mais legíveis:
+  - Listar vendas com nome do cliente e nome do produto (JOIN)
+  - Listar vendas a receber agrupadas por cliente (JOIN + agrupamento)
 - Cálculo automático de total da venda
 
 --
@@ -106,9 +108,8 @@ Projeto console (CLI), desenvolvido em Java puro.
 
 ## 📌 Status
 
-✅ V2.1.1: Cadastro e listagem de clientes no fluxo de venda
+✅ - V2.1.2: Cliente obrigatório em toda venda + seleção por nome/lista (sem ID) + listagens mais amigável para usuário
 
 ### Próximos passos:
 
-- V2.1.2: Cliente obrigatório em toda venda + seleção por nome/lista (sem ID) + listagens mais user friendly
-- V2.2: Relátórios (período, produto, devedores) + Permitir pagamento parcial
+- V2.2: Relátórios (período, produto, devedores) + Pagamento parcial (saldo devedor) + Melhoria UX nas listagens e buscas
