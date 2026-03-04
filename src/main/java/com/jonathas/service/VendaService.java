@@ -52,20 +52,6 @@ public class VendaService {
                     validarItem(conn, item);
                 }
 
-                // Removido pois estava dando duplicidade em selecionar cliente
-                // Valida cliente se vier preenchido
-                /*if (clienteId != null) {
-                    //Valida se existe na tabela emitente
-                    try (var stmt = conn.prepareStatement("SELECT id FROM emitente WHERE id = ? AND ativo = 1")) {
-                        stmt.setLong(1, clienteId);
-                        try (var rs = stmt.executeQuery()) {
-                            if (rs.next()) {
-                                throw new SQLException("Cliente não encontrado ou inativo (id= " + clienteId + ").");
-                            }
-                        }
-                    }
-                }*/
-
                 // Insere cabeçalho
                 Venda venda = new Venda(LocalDateTime.now());
                 venda.setClienteId(clienteId);
@@ -187,12 +173,7 @@ public class VendaService {
 
     public List<Venda> listarVendasComItens() throws SQLException {
         try (Connection conn = ConnectionFactory.getConnection()) {
-            List<Venda> vendas = vendaRepository.listarCabecalhos(conn);
-
-            for (Venda v : vendas) {
-                v.setItens(itemVendaRepository.listarPorVendaId(v.getId(), conn));
-            }
-            return vendas;
+            return vendaRepository.listarVendasDetalhadas(conn);
         }
     }
 
@@ -239,20 +220,14 @@ public class VendaService {
 
             int linhas = stmt.executeUpdate();
             if (linhas == 0) {
-                throw new SQLException("Venda no encontrada status (id= " + vendaId + ").");
+                throw new SQLException("Venda não encontrada status (id= " + vendaId + ").");
             }
         }
     }
 
     public List<Venda> listarVendasAReceberComItens() throws SQLException {
         try (Connection conn = ConnectionFactory.getConnection()) {
-            List<Venda> vendas = vendaRepository.listarAReceber(conn);
-
-            for (Venda v : vendas) {
-                v.setItens(itemVendaRepository.listarPorVendaId(v.getId(), conn));
-            }
-
-            return vendas;
+            return vendaRepository.listarAReceberDetalhadas(conn);
         }
     }
 

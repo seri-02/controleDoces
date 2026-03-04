@@ -11,9 +11,9 @@ public class Venda {
     private Long id;
     private LocalDateTime dataVenda;
 
-    // V2.1
     private Long clienteId;  // FK -> emitente.id
     private String status;   // "PAGO" | "A_RECEBER"
+    private String clienteNome;
 
     private List<ItemVenda> itens = new ArrayList<>();
 
@@ -86,8 +86,17 @@ public class Venda {
     public List<ItemVenda> getItens() {
         return itens;
     }
+
     public void setItens(List<ItemVenda> itens) {
         this.itens = itens;
+    }
+
+    public String getClienteNome() {
+        return clienteNome;
+    }
+
+    public void setClienteNome(String clienteNome) {
+        this.clienteNome = clienteNome;
     }
 
     @Override

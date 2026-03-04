@@ -1,5 +1,6 @@
 package com.jonathas.repository;
 
+import com.jonathas.model.ItemVenda;
 import com.jonathas.model.Venda;
 
 import java.sql.*;
@@ -111,4 +112,118 @@ public class VendaRepository {
         }
         return vendas;
     }
+
+    public List<Venda> listarVendasDetalhadas(Connection conn) throws SQLException {
+        String sql = """
+            SELECT
+                v.id AS venda_id,
+                v.data_venda,
+                v.status,
+                v.cliente_id,
+                e.nome AS cliente_nome,
+                iv.produto_id,
+                p.nome AS produto_nome,
+                iv.quantidade,
+                iv.valor_unitario
+            FROM venda v
+            LEFT JOIN emitente e ON e.id = v.cliente_id
+            JOIN item_venda iv ON iv.venda_id = v.id
+            JOIN produto p ON p.id = iv.produto_id
+            ORDER BY v.data_venda DESC, v.id DESC
+        """;
+
+        // Manter ordem
+        java.util.Map<Long, Venda> mapa = new java.util.LinkedHashMap<>();
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                Long vendaId = rs.getLong("venda_id");
+
+                Venda venda = mapa.get(vendaId);
+                if (venda == null) {
+                    venda = new Venda();
+                    venda.setId(vendaId);
+                    venda.setDataVenda(rs.getTimestamp("data_venda").toLocalDateTime());
+                    venda.setStatus(rs.getString("status"));
+
+                    long clienteId = rs.getLong("cliente_id");
+                    venda.setClienteId(rs.wasNull() ? null : clienteId);
+
+                    venda.setClienteNome(rs.getString("cliente_nome")); // aceita null
+                    venda.setItens(new java.util.ArrayList<>());
+
+                    mapa.put(vendaId, venda);
+                }
+
+                // Mostra item
+                com.jonathas.model.ItemVenda item = new com.jonathas.model.ItemVenda();
+                item.setProdutoId(rs.getLong("produto_id"));
+                item.setProdutoNome(rs.getString("produto_nome"));
+                item.setQuantidade(rs.getInt("quantidade"));
+                item.setValorUnitario(rs.getBigDecimal("valor_unitario"));
+
+                venda.adicionarItem(item);
+            }
+        }
+
+        return new java.util.ArrayList<>(mapa.values());
+
+    }
+
+    public List<Venda> listarAReceberDetalhadas(Connection conn) throws SQLException {
+        String sql = """
+            SELECT
+                v.id AS venda_id,
+                v.data_venda,
+                v.status,
+                v.cliente_id,
+                e.nome AS cliente_nome,
+                iv.produto_id,
+                p.nome AS produto_nome,
+                iv.quantidade,
+                iv.valor_unitario
+            FROM venda v
+            JOIN emitente e ON e.id = v.cliente_id
+            JOIN item_venda iv ON iv.venda_id = v.id
+            JOIN produto p ON p.id = iv.produto_id
+            WHERE v.status = 'A_RECEBER'
+            ORDER BY v.data_venda DESC, v.id DESC
+        """;
+
+        java.util.Map<Long, Venda> mapa = new java.util.LinkedHashMap<>();
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                Long vendaId = rs.getLong("venda_id");
+
+                Venda venda = mapa.get(vendaId);
+                if (venda == null) {
+                    venda = new Venda();
+                    venda.setId(vendaId);
+                    venda.setDataVenda(rs.getTimestamp("data_venda").toLocalDateTime());
+                    venda.setStatus(rs.getString("status"));
+                    venda.setClienteId(rs.getLong("cliente_id"));
+                    venda.setClienteNome(rs.getString("cliente_nome"));
+                    venda.setItens(new java.util.ArrayList<>());
+
+                    mapa.put(vendaId, venda);
+                }
+
+                ItemVenda item = new ItemVenda();
+                item.setProdutoId(rs.getLong("produto_id"));
+                item.setProdutoNome(rs.getString("produto_nome"));
+                item.setQuantidade(rs.getInt("quantidade"));
+                item.setValorUnitario(rs.getBigDecimal("valor_unitario"));
+
+                venda.adicionarItem(item);
+            }
+        }
+
+        return new java.util.ArrayList<>(mapa.values());
+    }
+
 }

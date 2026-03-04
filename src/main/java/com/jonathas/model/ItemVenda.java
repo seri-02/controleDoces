@@ -11,6 +11,7 @@ public class ItemVenda {
     private Long produtoId;
     private int quantidade;
     private BigDecimal valorUnitario;
+    private String produtoNome;
 
     public ItemVenda() {
     }
@@ -71,6 +72,14 @@ public class ItemVenda {
 
     public void setValorUnitario(BigDecimal valorUnitario) {
         this.valorUnitario = valorUnitario;
+    }
+
+    public String getProdutoNome() {
+        return produtoNome;
+    }
+
+    public void setProdutoNome(String produtoNome) {
+        this.produtoNome = produtoNome;
     }
 
     // Equals/hashCode
