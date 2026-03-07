@@ -25,49 +25,185 @@ public class ConsoleApp {
 
     public void start() {
         while (running) {
-            printMenu();
+            printMenuPrincipal();
             int opcao = readInt("Escolha uma opção: ");
-            handleOption(opcao);
+            handleMenuPrincipal(opcao);
         }
 
         scanner.close();
         System.out.println("Programa encerrado.");
     }
 
-    private void printMenu() {
-        System.out.println();
-        System.out.println("============= Controle de Doces =============");
-        System.out.println("1 - Cadastrar produto");
-        System.out.println("2 - Listar produtos");
-        System.out.println("3 - Registrar venda");
-        System.out.println("4 - Listar vendas");
-        System.out.println("5 - Editar produto");
-        System.out.println("6 - Inativar produto");
-        System.out.println("7 - Ajustar estoque");
-        System.out.println("8 - Registrar pagamento");
-        System.out.println("9 - Listar pagamento");
-        System.out.println("10 - Cadastrar cliente");
-        System.out.println("11 - Listar clientes");
+    private void printMenuPrincipal() {
+        printTitulo("Controle de Doces");
+        System.out.println("1 - Produtos");
+        System.out.println("2 - Vendas");
+        System.out.println("3 - Financeiro");
+        System.out.println("4 - Clientes");
         System.out.println("0 - Sair");
-        System.out.println("=============================================\n");
+        printLinha();
         System.out.println();
     }
 
-    private void handleOption(int opcao) {
+    private void printMenuProdutos() {
+        printTitulo("Produtos");
+        System.out.println("1 - Cadastrar produto");
+        System.out.println("2 - Listar produtos");
+        System.out.println("3 - Editar produto");
+        System.out.println("4 - Inativar produto");
+        System.out.println("5 - Ajustar estoque");
+        System.out.println("0 - Voltar");
+        printLinha();
+        System.out.println();
+    }
+
+    private void printMenuVendas() {
+        printTitulo("Vendas");
+        System.out.println("1 - Registrar venda");
+        System.out.println("2 - Listar vendas");
+        System.out.println("0 - Voltar");
+        printLinha();
+        System.out.println();
+    }
+
+    private void printMenuFinanceiro() {
+        printTitulo("Financeiro");
+        System.out.println("1 - Registrar pagamento");
+        System.out.println("2 - Listar vendas a receber");
+        System.out.println("0 - Voltar");
+        printLinha();
+        System.out.println();
+    }
+
+    private void printMenuClientes() {
+        printTitulo("Clientes");
+        System.out.println("1 - Cadastrar cliente");
+        System.out.println("2 - Listar clientes");
+        System.out.println("0 - Voltar");
+        printLinha();
+        System.out.println();
+    }
+
+    private void handleMenuPrincipal(int opcao) {
         switch (opcao) {
-            case 1 -> cadastrarProduto();
-            case 2 -> listarProdutos();
-            case 3 -> registrarVenda();
-            case 4 -> listarVendas();
-            case 5 -> editarProduto();
-            case 6 -> inativarProduto();
-            case 7 -> ajustarEstoque();
-            case 8 -> registrarPagamento();
-            case 9 -> listarVendasAReceber();
-            case 10 -> cadastrarCliente();
-            case 11 -> listarClientes();
+            case 1 -> menuProdutos();
+            case 2 -> menuVendas();
+            case 3 -> menuFinanceiro();
+            case 4 -> menuClientes();
             case 0 -> running = false;
             default -> System.out.println("Opção inválida. Tente novamente.");
+        }
+    }
+
+    private void menuProdutos() {
+        boolean voltar = false;
+
+        while (!voltar) {
+            printMenuProdutos();
+            int opcao = readInt("Escolha uma opção: ");
+
+            switch (opcao) {
+                case 1 -> {
+                    cadastrarProduto();
+                    pressionarEnterParaContinuar();
+                }
+                case 2 -> {
+                    listarProdutos();
+                    pressionarEnterParaContinuar();
+                }
+                case 3 -> {
+                    editarProduto();
+                    pressionarEnterParaContinuar();
+                }
+                case 4 -> {
+                    inativarProduto();
+                    pressionarEnterParaContinuar();
+                }
+                case 5 -> {
+                    ajustarEstoque();
+                    pressionarEnterParaContinuar();
+                }
+                case 0 -> voltar = true;
+                default -> {
+                    System.out.println("Opção inválida. Tente novamente.");
+                    pressionarEnterParaContinuar();
+                }
+            }
+        }
+    }
+
+    private void menuVendas() {
+        boolean voltar = false;
+
+        while (!voltar) {
+            printMenuVendas();
+            int opcao = readInt("Escolha uma opção: ");
+
+            switch (opcao) {
+                case 1 -> {
+                    registrarVenda();
+                    pressionarEnterParaContinuar();
+                }
+                case 2 -> {
+                    listarVendas();
+                    pressionarEnterParaContinuar();
+                }
+                case 0 -> voltar = true;
+                default -> {
+                    System.out.println("Opção inválida. Tente novamente.");
+                    pressionarEnterParaContinuar();
+                }
+            }
+        }
+    }
+
+    private void menuFinanceiro() {
+        boolean voltar = false;
+
+        while (!voltar) {
+            printMenuFinanceiro();
+            int opcao = readInt("Escolha uma opção: ");
+
+            switch (opcao) {
+                case 1 -> {
+                    registrarPagamento();
+                    pressionarEnterParaContinuar();
+                }
+                case 2 -> {
+                    listarVendasAReceber();
+                    pressionarEnterParaContinuar();
+                }
+                case 0 -> voltar = true;
+                default -> {
+                    System.out.println("Opção inválida. Tente novamente.");
+                    pressionarEnterParaContinuar();
+                }
+            }
+        }
+    }
+
+    private void menuClientes() {
+        boolean voltar = false;
+
+        while (!voltar) {
+            printMenuClientes();
+            int opcao = readInt("Escolha uma opção: ");
+
+            switch (opcao) {
+                case 1 -> {
+                    cadastrarCliente();
+                    pressionarEnterParaContinuar();
+                }
+                case 2 -> {
+                    listarClientes();
+                    pressionarEnterParaContinuar();
+                }
+                case 0 -> voltar = true;
+                default -> {
+                    System.out.println("Opção inválida. Tente novamente.");
+                    pressionarEnterParaContinuar();
+                }
+            }
         }
     }
 
@@ -83,9 +219,28 @@ public class ConsoleApp {
         }
     }
 
-    public void cadastrarProduto() {
+    private String readString(String prompt) {
+        System.out.print(prompt);
+        return scanner.nextLine().trim();
+    }
+
+    private void printTitulo(String titulo) {
         System.out.println();
-        System.out.println("============= Cadastrar produto =============");
+        System.out.println("============== " + titulo + " ==============");
+    }
+
+    private void printLinha() {
+        System.out.println("=============================================");
+    }
+
+    private void pressionarEnterParaContinuar() {
+        System.out.println();
+        System.out.println("Pressione Enter para continuar..");
+        scanner.nextLine();
+    }
+
+    public void cadastrarProduto() {
+        printTitulo("Cadastrar produto");
 
         String nome = readString("Nome do produto: ");
         String descricao = readString("Descrição (opcional): ");
@@ -119,14 +274,8 @@ public class ConsoleApp {
         System.out.println("Produto cadastrado com sucesso. ID: " + produto.getId());
     }
 
-    private String readString(String prompt) {
-        System.out.print(prompt);
-        return scanner.nextLine().trim();
-    }
-
     public void listarProdutos() {
-        System.out.println();
-        System.out.println("============== Listar produtos ==============");
+        printTitulo("Listar produtos");
 
         var produtos = produtoRepository.listarTodos();
 
@@ -172,8 +321,7 @@ public class ConsoleApp {
     }
 
     private void editarProduto() {
-        System.out.println();
-        System.out.println("============== Editar produto ==============");
+        printTitulo("Editar produto");
 
         long id = readInt("ID do produto: ");
         Produto produto = produtoRepository.buscarPorId(id);
@@ -205,8 +353,7 @@ public class ConsoleApp {
     }
 
     private void inativarProduto() {
-        System.out.println();
-        System.out.println("============== Inativar produto ==============");
+        printTitulo("Inativar produto");
 
         long id = readInt("ID do produto: ");
         Produto produto = produtoRepository.buscarPorId(id);
@@ -226,8 +373,7 @@ public class ConsoleApp {
     }
 
     private void ajustarEstoque() {
-        System.out.println();
-        System.out.println("============== Ajustar estoque ==============");
+        printTitulo("Ajustar estoque");
 
         long id = readInt("ID do produto: ");
         Produto produto = produtoRepository.buscarPorId(id);
@@ -253,8 +399,7 @@ public class ConsoleApp {
     }
 
     private void registrarVenda() {
-        System.out.println();
-        System.out.println("============== Registrar venda ==============");
+        printTitulo("Registrar venda");
 
         List<ItemVenda> itens = new ArrayList<>();
 
@@ -297,7 +442,7 @@ public class ConsoleApp {
 
         Long clienteId = selecionarClientePorNumero();
             if (clienteId == null) {
-                System.out.println("Venda fiado exige um cliente. Cadastre ou selecione um cliente para prosseguir.");
+                System.out.println("Venda exige um cliente. Cadastre ou selecione um cliente para prosseguir.");
                 return;
         }
 
@@ -310,8 +455,7 @@ public class ConsoleApp {
     }
 
     private void listarVendas() {
-        System.out.println();
-        System.out.println("============== Listar vendas ==============");
+        printTitulo("Listar vendas");
 
         try {
             var vendas = vendaService.listarVendasComItens();
@@ -354,8 +498,7 @@ public class ConsoleApp {
     }
 
     private void registrarPagamento() {
-        System.out.println();
-        System.out.println("============== Registrar pagamento ==============");
+        printTitulo("Registrar pagamento");
 
         long vendaId = readInt("ID da venda para quitar: ");
 
@@ -368,8 +511,7 @@ public class ConsoleApp {
     }
 
     private void listarVendasAReceber() {
-        System.out.println();
-        System.out.println("============== Vendas a Receber ==============");
+        printTitulo("Vendas a receber");
 
         try {
             var vendas =  vendaService.listarVendasAReceberComItens();
@@ -440,8 +582,7 @@ public class ConsoleApp {
     }
 
     private void cadastrarCliente() {
-        System.out.println();
-        System.out.println("============== Cadastrar cliente ==============");
+        printTitulo("Cadastrar cliente");
 
         String nome = readString("Nome do cliente: ");
         if (nome.isBlank()) {
@@ -463,8 +604,7 @@ public class ConsoleApp {
     }
 
     private void listarClientes() {
-        System.out.println();
-        System.out.println("============== Listar clientes ==============");
+        printTitulo("Listar clientes");
 
         var clientes = emitterRepository.listarClientesAtivos();
 
@@ -485,8 +625,7 @@ public class ConsoleApp {
     }
 
     private Long selecionarClientePorNumero() {
-        System.out.println();
-        System.out.println("============== Selecionar cliente ==============");
+        printTitulo("Selecionar cliente");
 
         String termo = readString("Buscar por nome (Enter para listar todos): ");
 
@@ -525,8 +664,7 @@ public class ConsoleApp {
     }
 
     private Produto selecionarProdutoPorNumero() {
-        System.out.println();
-        System.out.println("============== Selecionar produto ==============");
+        printTitulo("Selecionar produto");
 
         String termo = readString("Buscar produto por nome: ");
         if (termo.isBlank()) {
