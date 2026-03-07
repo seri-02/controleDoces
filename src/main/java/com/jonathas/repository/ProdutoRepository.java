@@ -287,5 +287,34 @@ public class ProdutoRepository {
         return produtos;
     }
 
+    public List<Produto> buscarPorNome(String termo) {
+        String sql = "SELECT * FROM produto WHERE nome LIKE ? ORDER BY nome ASC";
+
+        List<Produto> produtos = new ArrayList<>();
+
+        try (Connection conn = ConnectionFactory.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, "%" + termo + "%");
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()){
+                    Produto produto = new Produto();
+                    produto.setId(rs.getLong("id"));
+                    produto.setNome(rs.getString("nome"));
+                    produto.setDescricao(rs.getString("descricao"));
+                    produto.setAtivo(rs.getBoolean("ativo"));
+                    produto.setQuantidade(rs.getInt("quantidade"));
+                    produto.setPrecoPadrao(rs.getBigDecimal("preco_padrao"));
+                    produto.setCustoUnitario(rs.getBigDecimal("custo_unitario"));
+                    produtos.add(produto);
+                }
+            }
+        }catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar produtos por nome.", e);
+        }
+
+        return produtos;
+    }
 
 }

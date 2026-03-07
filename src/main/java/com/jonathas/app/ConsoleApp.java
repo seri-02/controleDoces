@@ -323,11 +323,10 @@ public class ConsoleApp {
     private void editarProduto() {
         printTitulo("Editar produto");
 
-        long id = readInt("ID do produto: ");
-        Produto produto = produtoRepository.buscarPorId(id);
+        Produto produto = selecionarProdutoParaGestao();
 
         if (produto == null) {
-            System.out.println("Produto não encontrado");
+            System.out.println("Operação cancelada.");
             return;
         }
 
@@ -335,7 +334,6 @@ public class ConsoleApp {
 
         String nome = readString("Nome (" + produto.getNome() + "): ");
         String descricao = readString("Descrição (" + (produto.getDescricao() == null ? "" : produto.getDescricao()) + "): ");
-
         String ativoStr = readString("Ativo (s/n) (" + (produto.getAtivo() ? "s" : "n") + "): ").toLowerCase();
         String precoStr = readString("Preço padrão (" + produto.getPrecoPadrao() + "): ").replace(",", ".");
         String custoStr = readString("Custo unitário (" + produto.getCustoUnitario() + "): ").replace(",", ".");
@@ -343,11 +341,24 @@ public class ConsoleApp {
         if (!nome.isBlank()) produto.setNome(nome);
         if (!descricao.isBlank()) produto.setDescricao(descricao);
 
-        if (ativoStr.equals("s")) produto.setAtivo(true);
-        else if (ativoStr.equals("n")) produto.setAtivo(false);
+        if (ativoStr.equals("s")) {
+            produto.setAtivo(true);
+        } else if (ativoStr.equals("n")) {
+            produto.setAtivo(false);
+        }
 
-        if (!precoStr.isBlank()) produto.setPrecoPadrao(new BigDecimal(precoStr));
-        if (!custoStr.isBlank()) produto.setCustoUnitario(new BigDecimal(custoStr));
+        try {
+            if (!precoStr.isBlank()) {
+                produto.setPrecoPadrao(new BigDecimal(precoStr));
+            }
+
+            if (!custoStr.isBlank()) {
+                produto.setCustoUnitario(new BigDecimal(custoStr));
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Preço ou custo inválido. Edição cancelada.");
+            return;
+        }
 
         produtoRepository.atualizar(produto);
     }
@@ -355,37 +366,46 @@ public class ConsoleApp {
     private void inativarProduto() {
         printTitulo("Inativar produto");
 
-        long id = readInt("ID do produto: ");
-        Produto produto = produtoRepository.buscarPorId(id);
+        Produto produto = selecionarProdutoParaGestao();
 
         if (produto == null) {
-            System.out.println("Produto não encontrado");
+            System.out.println("Operação cancelada.");
+            return;
+        }
+
+        if (!produto.getAtivo()) {
+            System.out.println("Esse produto já está inativo.");
             return;
         }
 
         String confirma = readString("Tem certeza que deseja inativar '" + produto.getNome() + "'? (s/n): ").toLowerCase();
+
         if (!confirma.equals("s")) {
             System.out.println("Operação cancelada.");
             return;
         }
 
-        produtoRepository.inativar(id);
+        produtoRepository.inativar(produto.getId());
     }
 
     private void ajustarEstoque() {
         printTitulo("Ajustar estoque");
 
-        long id = readInt("ID do produto: ");
-        Produto produto = produtoRepository.buscarPorId(id);
+        Produto produto = selecionarProdutoParaGestao();
 
         if (produto == null) {
-            System.out.println("Produto não encontrado");
+            System.out.println("Operação cancelada.");
             return;
         }
 
         System.out.println("Produto: " + produto.getNome() + " | Estoque atual: " + produto.getQuantidade());
 
         String tipo = readString("Ajuste (+/-): ").trim();
+        if (!tipo.equals("+") && !tipo.equals("-")) {
+            System.out.println("Tipo de ajuste inválido. Use + ou -.");
+            return;
+        }
+
         int qtd = readInt("Quantidade: ");
 
         if (qtd <= 0) {
@@ -395,7 +415,12 @@ public class ConsoleApp {
 
         int delta = tipo.equals("-") ? -qtd : qtd;
 
-        produtoRepository.ajustarEstoque(id, delta);
+        if (produto.getQuantidade() + delta < 0) {
+            System.out.println("Operação inválida. Estoque não pode ficar negativo.");
+            return;
+        }
+
+        produtoRepository.ajustarEstoque(produto.getId(), delta);
     }
 
     private void registrarVenda() {
@@ -500,10 +525,15 @@ public class ConsoleApp {
     private void registrarPagamento() {
         printTitulo("Registrar pagamento");
 
-        long vendaId = readInt("ID da venda para quitar: ");
+        Venda venda = selecionarVendaAReceberPorNumero();
+
+        if (venda == null) {
+            System.out.println("Operação cancelada.");
+            return;
+        }
 
         try {
-            vendaService.registrarPagamentoIntegral(vendaId);
+            vendaService.registrarPagamentoIntegral(venda.getId());
             System.out.println("Pagamento registrado e venda marcada como PAGO.");
         } catch (SQLException e) {
             System.out.println("Erro ao registrar pagamento." + e.getMessage());
@@ -700,6 +730,85 @@ public class ConsoleApp {
             }
 
             System.out.println("Opção inválida. Digite entre 1 e " + produtos.size() + " (ou 0 para cancelar).");
+        }
+    }
+
+    private Produto selecionarProdutoParaGestao() {
+        printTitulo("Selecionar produto");
+
+        String termo = readString("Buscar produto por nome (Enter para listar todos): ");
+
+        List<Produto> produtos = termo.isBlank()
+                ? produtoRepository.listarTodos()
+                : produtoRepository.buscarAtivosPorNome(termo);
+
+        if (produtos.isEmpty()) {
+            System.out.println("Nenhum produto encontrado.");
+            return null;
+        }
+
+        for (int i = 0; i < produtos.size(); i++) {
+            Produto p = produtos.get(i);
+            System.out.printf(
+                    "%d) %s | estoque: %d | ativo: %s | preço: %s%n",
+                    i + 1,
+                    p.getNome(),
+                    p.getQuantidade(),
+                    p.getAtivo() ? "Sim" : "Não",
+                    p.getPrecoPadrao()
+            );
+        }
+
+        while (true) {
+            int escolha = readInt("Escolha um produto (0 para cancelar): ");
+
+            if (escolha == 0) return null;
+
+            if (escolha >= 1 && escolha <= produtos.size()) {
+                return produtos.get(escolha - 1);
+            }
+
+            System.out.println("Opção inválida. Digite um número entre 1 e " + produtos.size() + " (ou 0 para cancelar).");
+        }
+    }
+
+    private Venda selecionarVendaAReceberPorNumero() {
+        printTitulo("Selecionar vend a receber");
+
+        try {
+            List<Venda> vendas = vendaService.listarVendasAReceberComItens();
+
+            if (vendas.isEmpty()) {
+                System.out.println("Nenhum venda encontrado.");
+                return null;
+            }
+
+            for (int i = 0; i < vendas.size(); i++) {
+                Venda v = vendas.get(i);
+                System.out.printf(
+                        "%d) Venda #%d | Data: %s | Cliente: %s | Total: %s%n",
+                        i + 1,
+                        v.getId(),
+                        v.getDataVenda(),
+                        v.getClienteNome() == null ? "(sem nome)" : v.getClienteNome(),
+                        v.getTotal()
+                );
+            }
+
+            while (true) {
+                int escolha = readInt("Escolha uma venda (0 para cancelar): ");
+
+                if (escolha == 0) return null;
+
+                if (escolha >= 1 && escolha <= vendas.size()) {
+                    return vendas.get(escolha - 1);
+                }
+
+                System.out.println("Opção inválida. Digite um número entre 1 e " + vendas.size() + " (ou 0 para cancelar).");
+            }
+        }catch (Exception e) {
+            System.out.println("Erro ao carregar vendas a receber: " + e.getMessage());
+            return null;
         }
     }
 }
