@@ -108,8 +108,8 @@ Projeto console (CLI), desenvolvido em Java puro.
 
 ## 📌 Status
 
-✅ - V2.1.2: Cliente obrigatório em toda venda + seleção por nome/lista (sem ID) + listagens mais amigável para usuário
+✅ - V2.1.2: Melhoria UX nas listagens e buscas
 
 ### Próximos passos:
 
-- V2.2: Relátórios (período, produto, devedores) + Pagamento parcial (saldo devedor) + Melhoria UX nas listagens e buscas
+- V2.2: Relátórios (período, produto, devedores) + Pagamento parcial (saldo devedor)
