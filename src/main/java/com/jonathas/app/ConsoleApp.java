@@ -19,7 +19,7 @@ public class ConsoleApp {
 
     private final Scanner scanner = new Scanner(System.in);
     private final ProdutoRepository produtoRepository = new ProdutoRepository();
-    private final EmitenteRepository emitterRepository = new EmitenteRepository();
+    private final EmitenteRepository emitenteRepository = new EmitenteRepository();
     private final VendaService vendaService = new VendaService();
     private boolean running = true;
 
@@ -423,6 +423,18 @@ public class ConsoleApp {
         produtoRepository.ajustarEstoque(produto.getId(), delta);
     }
 
+    private BigDecimal calcularTotalItens(List<ItemVenda> itens) {
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (ItemVenda item : itens) {
+            BigDecimal subtotal = item.getValorUnitario()
+                    .multiply(new BigDecimal(item.getQuantidade()));
+            total = total.add(subtotal);
+        }
+
+        return total;
+    }
+
     private void registrarVenda() {
         printTitulo("Registrar venda");
 
@@ -462,17 +474,19 @@ public class ConsoleApp {
             }
         }
 
-        String pago = readString("Venda foi paga? (s/n): ").toLowerCase();
-        String status = pago.equals("s") ? "PAGO" : "A_RECEBER";
-
         Long clienteId = selecionarClientePorNumero();
             if (clienteId == null) {
-                System.out.println("Venda exige um cliente. Cadastre ou selecione um cliente para prosseguir.");
+                System.out.println("Registro venda cancelado.");
                 return;
         }
 
+        BigDecimal totalVenda = calcularTotalItens(itens);
+        System.out.println("Total da venda: " + totalVenda);
+
+        BigDecimal valorPagoInicial = readBigDecimal("Valor pago agora (0 para deixar em aberto): ");
+
         try {
-            long vendaId = vendaService.registrarVenda(itens, clienteId, status);
+            long vendaId = vendaService.registrarVenda(itens, clienteId, valorPagoInicial);
             System.out.println("Venda registrada com sucesso. ID: " + vendaId);
         } catch (Exception e) {
             System.out.println("Erro ao registrar venda." + e.getMessage());
@@ -510,8 +524,8 @@ public class ConsoleApp {
                     );
                 }
 
-                System.out.println("Total da venda: " + v.getTotal());
-                totalGeral = totalGeral.add(v.getTotal());
+                System.out.println("Total da venda: " + v.getValorTotal());
+                totalGeral = totalGeral.add(v.getValorTotal());
             }
 
             System.out.println("------------------------------------------------------------");
@@ -533,10 +547,20 @@ public class ConsoleApp {
         }
 
         try {
-            vendaService.registrarPagamentoIntegral(venda.getId());
-            System.out.println("Pagamento registrado e venda marcada como PAGO.");
+            BigDecimal totalPago = vendaService.obterTotalPago(venda.getId());
+            BigDecimal saldoDevedor = vendaService.obterSaldoDevedor(venda.getId());
+
+            System.out.println("Resumo da venda:");
+            System.out.println("Total da venda: " + venda.getValorTotal());
+            System.out.println("Total já pago: " + totalPago);
+            System.out.println("Saldo restante: " + saldoDevedor);
+
+            BigDecimal valorPago = readBigDecimal("Valor do pagamento (máximo " + saldoDevedor + "): ");
+
+            vendaService.registrarPagamento(venda.getId(), valorPago);
+            System.out.println("Pagamento registrado com sucesso.");
         } catch (SQLException e) {
-            System.out.println("Erro ao registrar pagamento." + e.getMessage());
+            System.out.println("Erro ao registrar pagamento. " + e.getMessage());
         }
     }
 
@@ -576,9 +600,13 @@ public class ConsoleApp {
 
                 for (var v : vendaDoCliente) {
 
+                    BigDecimal totalPago = vendaService.obterTotalPago(v.getId());
+                    BigDecimal saldoDevedor = vendaService.obterSaldoDevedor(v.getId());
+
                     System.out.println("------------------------------------------------------------");
                     System.out.println("Venda #" + v.getId()
-                            + " | Data: " + v.getDataVenda());
+                            + " | Data: " + v.getDataVenda()
+                            + " | Cliente: " + (v.getClienteNome() == null ? "(sem nome)" : v.getClienteNome()));
 
                     System.out.printf("%-25s %-6s %-12s %-12s%n",
                             "Produto", "Qtd", "V.Unit", "Subtotal");
@@ -592,8 +620,10 @@ public class ConsoleApp {
                         );
                     }
 
-                    System.out.println("Total da venda: " + v.getTotal());
-                    totalCliente = totalCliente.add(v.getTotal());
+                    System.out.println("Total da venda: " + v.getValorTotal());
+                    System.out.println("Total já pago: " + totalPago);
+                    System.out.println("Saldo restante: " + saldoDevedor);
+                    totalCliente = totalCliente.add(v.getValorTotal());
                 }
 
                 System.out.println("------------------------------------------------------------");
@@ -629,14 +659,14 @@ public class ConsoleApp {
         cliente.setTipo(tipo);
         cliente.setAtivo(true);
 
-        emitterRepository.salvar(cliente);
+        emitenteRepository.salvar(cliente);
         System.out.println("Cliente cadastrado. ID: " + cliente.getId());
     }
 
     private void listarClientes() {
         printTitulo("Listar clientes");
 
-        var clientes = emitterRepository.listarClientesAtivos();
+        var clientes = emitenteRepository.listarClientesAtivos();
 
         if (clientes.isEmpty()) {
             System.out.println("Nenhum cliente encontrado.");
@@ -661,8 +691,8 @@ public class ConsoleApp {
 
         // TODO: Verificar depois
         var clientes = termo.isBlank()
-                ? emitterRepository.listarClientesAtivos()
-                : emitterRepository.buscarClientesPorNome(termo);
+                ? emitenteRepository.listarClientesAtivos()
+                : emitenteRepository.buscarClientesPorNome(termo);
 
         if (clientes.isEmpty()) {
             System.out.println("Nenhum cliente encontrado.");
@@ -785,13 +815,18 @@ public class ConsoleApp {
 
             for (int i = 0; i < vendas.size(); i++) {
                 Venda v = vendas.get(i);
+                BigDecimal totalPago = vendaService.obterTotalPago(v.getId());
+                BigDecimal saldoDevedor = vendaService.obterSaldoDevedor(v.getId());
                 System.out.printf(
-                        "%d) Venda #%d | Data: %s | Cliente: %s | Total: %s%n",
+                        "%d) Venda #%d | Data: %s | Cliente: %s | Status: %s | Total: %s | Pago: %s | Falta: %s%n",
                         i + 1,
                         v.getId(),
                         v.getDataVenda(),
                         v.getClienteNome() == null ? "(sem nome)" : v.getClienteNome(),
-                        v.getTotal()
+                        v.getStatus(),
+                        v.getValorTotal(),
+                        totalPago,
+                        saldoDevedor
                 );
             }
 

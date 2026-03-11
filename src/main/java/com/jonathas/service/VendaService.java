@@ -31,17 +31,14 @@ public class VendaService {
     }
 
     // Registra uma venda com múltiplos itens em uma única transação
-    public long registrarVenda(List<ItemVenda> itens, Long clienteId, String status) throws SQLException {
+    public long registrarVenda(List<ItemVenda> itens, Long clienteId, BigDecimal valorPagoInicial) throws SQLException {
         validarItens(itens);
+        validarCliente(clienteId);
 
-        if (status == null || status.isBlank()) {
-            status = "PAGO";
-        }
-        status = status.toUpperCase();
+        BigDecimal valorTotal = calcularTotalVenda(itens);
+        validarValorPagoInicial(valorPagoInicial, valorTotal);
 
-        if (!status.equals("PAGO") && !status.equals("A_RECEBER")) {
-            throw new SQLException("Status inválido. Use PAGO ou A_RECEBER");
-        }
+        String status = definirStatus(valorTotal, valorPagoInicial);
 
         try (Connection conn = ConnectionFactory.getConnection()) {
             conn.setAutoCommit(false);
@@ -56,6 +53,7 @@ public class VendaService {
                 Venda venda = new Venda(LocalDateTime.now());
                 venda.setClienteId(clienteId);
                 venda.setStatus(status);
+                venda.setValorTotal(valorTotal);
 
                 long vendaId = vendaRepository.inserir(venda, conn);
 
@@ -65,10 +63,9 @@ public class VendaService {
                     produtoRepository.baixarEstoque(conn, item.getProdutoId(), item.getQuantidade());
                 }
 
-                // Se status PAGO, registra pagamento
-                if (status.equals("PAGO")) {
-                    BigDecimal total = calcularTotalVenda(itens);
-                    Pagamento pagamento = new Pagamento(vendaId, LocalDateTime.now(), total);
+                // Registra pagamento inicial, se houver
+                if (valorPagoInicial.compareTo(BigDecimal.ZERO) > 0) {
+                    Pagamento pagamento = new Pagamento(vendaId, LocalDateTime.now(), valorPagoInicial);
                     pagamentoRepository.inserir(pagamento, conn);
                 }
 
@@ -81,6 +78,42 @@ public class VendaService {
                 conn.setAutoCommit(true);
             }
         }
+    }
+
+    private void validarCliente(Long clienteId) throws SQLException {
+        if (clienteId == null || clienteId <= 0) {
+            throw new SQLException("Cliente é obrigatório para registar venda.");
+        }
+    }
+
+    private void validarValorPagoInicial(BigDecimal valorPagoInicial, BigDecimal valorTotal) throws SQLException {
+        if (valorPagoInicial == null) {
+            throw new SQLException("O valor pago inicial não pode ser nulo.");
+        }
+
+        if (valorPagoInicial.compareTo(BigDecimal.ZERO) < 0) {
+            throw new SQLException("O valor pago inicial não pode ser negativo.");
+        }
+
+        if (valorPagoInicial.compareTo(valorTotal) > 0) {
+            throw new SQLException("O valor pago inicial não pode ser maior que o total da venda.");
+        }
+    }
+
+    private String definirStatus(BigDecimal valorTotal, BigDecimal valorPagoInicial) throws SQLException {
+        if (valorPagoInicial.compareTo(BigDecimal.ZERO) == 0) {
+            return "A_RECEBER";
+        }
+
+        if (valorPagoInicial.compareTo(valorTotal) < 0) {
+            return "PARCIAL";
+        }
+
+        if (valorPagoInicial.compareTo(valorTotal) == 0) {
+            return "PAGO";
+        }
+
+        throw new SQLException("Não foi possível definir o status da venda.");
     }
 
     private BigDecimal calcularTotalVenda(List<ItemVenda> itens) {
@@ -141,6 +174,73 @@ public class VendaService {
             } finally {
                 conn.setAutoCommit(true);
             }
+        }
+    }
+
+    private Venda buscarVendaPorId (long vendaId, Connection conn) throws SQLException {
+        return vendaRepository.buscarPorId(vendaId, conn);
+    }
+
+    public void registrarPagamento(long vendaId, BigDecimal valorPago) throws SQLException {
+        if (valorPago == null || valorPago.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new SQLException("O valor do pagamento deve ser maior que zero.");
+        }
+
+        try (Connection conn = ConnectionFactory.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try {
+                Venda venda = buscarVendaPorId(vendaId, conn);
+
+                if (venda == null) {
+                    throw new SQLException("Venda não encontrada.");
+                }
+
+                if ("PAGO".equalsIgnoreCase(venda.getStatus())) {
+                    throw new SQLException("Essa venda já está totalmente paga.");
+                }
+
+                BigDecimal totalPagoAtual = pagamentoRepository.somarPagamentosPorVenda(vendaId, conn);
+                BigDecimal saldoAtual = venda.getValorTotal().subtract(totalPagoAtual);
+
+                if (valorPago.compareTo(saldoAtual) > 0) {
+                    throw new SQLException("O valor do pagamento não pode ser maior que o saldo devedor.");
+                }
+
+                Pagamento pagamento = new Pagamento(vendaId, LocalDateTime.now(), valorPago);
+                pagamentoRepository.inserir(pagamento, conn);
+
+                BigDecimal novoTotalPago = totalPagoAtual.add(valorPago);
+                String novoStatus = definirStatus(venda.getValorTotal(), novoTotalPago);
+
+                vendaRepository.atualizarStatus(vendaId, novoStatus, conn);
+
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        }
+    }
+
+    public BigDecimal obterTotalPago(long vendaId) throws SQLException {
+        try (Connection conn = ConnectionFactory.getConnection()) {
+            return pagamentoRepository.somarPagamentosPorVenda(vendaId, conn);
+        }
+    }
+
+    public BigDecimal obterSaldoDevedor(long vendaId) throws SQLException {
+        try (Connection conn = ConnectionFactory.getConnection()) {
+            Venda venda = buscarVendaPorId(vendaId, conn);
+
+            if (venda == null) {
+                throw new SQLException("Venda não encontrada.");
+            }
+
+            BigDecimal totalPago = pagamentoRepository.somarPagamentosPorVenda(vendaId, conn);
+            return venda.getValorTotal().subtract(totalPago);
         }
     }
 
