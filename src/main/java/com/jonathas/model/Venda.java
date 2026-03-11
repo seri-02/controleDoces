@@ -14,24 +14,22 @@ public class Venda {
     private Long clienteId;  // FK -> emitente.id
     private String status;   // "PAGO" | "A_RECEBER"
     private String clienteNome;
+    private BigDecimal valorTotal;
 
     private List<ItemVenda> itens = new ArrayList<>();
 
     public Venda() {
         this.dataVenda = LocalDateTime.now();
-        this.status = "PAGO";
     }
 
     public Venda(Long id, LocalDateTime dataVenda) {
         this.id = id;
         this.dataVenda = dataVenda;
-        this.status = "PAGO";
     }
 
     // create sale in console
     public Venda(LocalDateTime dataVenda) {
         this.dataVenda = dataVenda;
-        this.status = "PAGO";
     }
 
     // Usefull rules
@@ -99,15 +97,24 @@ public class Venda {
         this.clienteNome = clienteNome;
     }
 
+    public BigDecimal getValorTotal() {
+        return valorTotal;
+    }
+
+    public void setValorTotal(BigDecimal valorTotal) {
+        this.valorTotal = valorTotal;
+    }
+
     @Override
     public String toString() {
         return "Venda{" +
                 "id=" + id +
-                ", dataVenda= " + dataVenda +
-                ", clienteId= " + clienteId +
+                ", dataVenda=" + dataVenda +
+                ", clienteId=" + clienteId +
                 ", status='" + status + '\'' +
-                ", itens= " + itens +
-                ", total= " + getTotal() +
+                ", valorTotal=" + valorTotal +
+                ", itens=" + itens +
+                ", totalCalculadoItens=" + getTotal() +
                 '}';
     }
 }

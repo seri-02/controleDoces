@@ -11,7 +11,7 @@ public class VendaRepository {
 
     // Cabeçalho da venda
     public long inserir(Venda venda, Connection conn) throws SQLException {
-        String sql = "INSERT INTO venda (data_venda, cliente_id, status) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO venda (data_venda, cliente_id, status, valor_total) VALUES (?, ?, ?, ?)";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setTimestamp(1, Timestamp.valueOf(venda.getDataVenda()));
@@ -23,6 +23,8 @@ public class VendaRepository {
             }
 
             stmt.setString(3, venda.getStatus());
+
+            stmt.setBigDecimal(4, venda.getValorTotal());
 
             stmt.executeUpdate();
 
@@ -40,7 +42,7 @@ public class VendaRepository {
     // Lista o cabeçalho
     public List<Venda> listarCabecalhos(Connection conn) throws SQLException {
         String sql = """
-            SELECT id, data_venda, cliente_id, status
+            SELECT id, data_venda, cliente_id, status, valor_total
             FROM venda
             ORDER BY data_venda DESC
         """;
@@ -63,6 +65,7 @@ public class VendaRepository {
                 }
 
                 venda.setStatus(rs.getString("status"));
+                venda.setValorTotal(rs.getBigDecimal("valor_total"));
 
                 vendas.add(venda);
             }
@@ -87,9 +90,9 @@ public class VendaRepository {
 
     public List<Venda> listarAReceber(Connection conn) throws SQLException {
         String sql = """
-        SELECT id, data_venda, cliente_id, status
+        SELECT id, data_venda, cliente_id, status, valor_total
         FROM venda
-        WHERE status = 'A_RECEBER'
+        WHERE status IN ('A_RECEBER', 'PARCIAL')
         ORDER BY data_venda DESC
     """;
 
@@ -107,6 +110,7 @@ public class VendaRepository {
                 venda.setClienteId(rs.wasNull() ? null : cid);
 
                 venda.setStatus(rs.getString("status"));
+                venda.setValorTotal(rs.getBigDecimal("valor_total"));
                 vendas.add(venda);
             }
         }
@@ -119,6 +123,7 @@ public class VendaRepository {
                 v.id AS venda_id,
                 v.data_venda,
                 v.status,
+                v.valor_total,
                 v.cliente_id,
                 e.nome AS cliente_nome,
                 iv.produto_id,
@@ -147,6 +152,7 @@ public class VendaRepository {
                     venda.setId(vendaId);
                     venda.setDataVenda(rs.getTimestamp("data_venda").toLocalDateTime());
                     venda.setStatus(rs.getString("status"));
+                    venda.setValorTotal(rs.getBigDecimal("valor_total"));
 
                     long clienteId = rs.getLong("cliente_id");
                     venda.setClienteId(rs.wasNull() ? null : clienteId);
@@ -178,6 +184,7 @@ public class VendaRepository {
                 v.id AS venda_id,
                 v.data_venda,
                 v.status,
+                v.valor_total,
                 v.cliente_id,
                 e.nome AS cliente_nome,
                 iv.produto_id,
@@ -188,7 +195,7 @@ public class VendaRepository {
             JOIN emitente e ON e.id = v.cliente_id
             JOIN item_venda iv ON iv.venda_id = v.id
             JOIN produto p ON p.id = iv.produto_id
-            WHERE v.status = 'A_RECEBER'
+            WHERE v.status IN ('A_RECEBER', 'PARCIAL')
             ORDER BY v.data_venda DESC, v.id DESC
         """;
 
@@ -206,6 +213,7 @@ public class VendaRepository {
                     venda.setId(vendaId);
                     venda.setDataVenda(rs.getTimestamp("data_venda").toLocalDateTime());
                     venda.setStatus(rs.getString("status"));
+                    venda.setValorTotal(rs.getBigDecimal("valor_total"));
                     venda.setClienteId(rs.getLong("cliente_id"));
                     venda.setClienteNome(rs.getString("cliente_nome"));
                     venda.setItens(new java.util.ArrayList<>());
@@ -224,6 +232,40 @@ public class VendaRepository {
         }
 
         return new java.util.ArrayList<>(mapa.values());
+    }
+
+    public Venda buscarPorId(Long vendaId, Connection conn) throws SQLException {
+        String sql = """
+        SELECT id, data_venda, cliente_id, status, valor_total
+        FROM venda
+        WHERE id = ?
+    """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, vendaId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Venda venda = new Venda();
+                    venda.setId(rs.getLong("id"));
+                    venda.setDataVenda(rs.getTimestamp("data_venda").toLocalDateTime());
+
+                    long clienteId = rs.getLong("cliente_id");
+                    if (rs.wasNull()) {
+                        venda.setClienteId(null);
+                    } else {
+                        venda.setClienteId(clienteId);
+                    }
+
+                    venda.setStatus(rs.getString("status"));
+                    venda.setValorTotal(rs.getBigDecimal("valor_total"));
+
+                    return venda;
+                }
+            }
+        }
+
+        return null;
     }
 
 }
