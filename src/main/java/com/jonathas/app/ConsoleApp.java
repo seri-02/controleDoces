@@ -9,11 +9,18 @@ import com.jonathas.model.Produto;
 import com.jonathas.model.ItemVenda;
 import com.jonathas.model.Emitente;
 import com.jonathas.service.VendaService;
-import java.math.BigDecimal;
+import com.jonathas.model.report.RelatorioVendasPeriodoItem;
+import com.jonathas.service.RelatorioVendaService;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.time.format.DateTimeFormatter;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 public class ConsoleApp {
 
@@ -21,6 +28,7 @@ public class ConsoleApp {
     private final ProdutoRepository produtoRepository = new ProdutoRepository();
     private final EmitenteRepository emitenteRepository = new EmitenteRepository();
     private final VendaService vendaService = new VendaService();
+    private final RelatorioVendaService relatorioVendaService = new RelatorioVendaService();
     private boolean running = true;
 
     public void start() {
@@ -36,50 +44,59 @@ public class ConsoleApp {
 
     private void printMenuPrincipal() {
         printTitulo("Controle de Doces");
-        System.out.println("1 - Produtos");
-        System.out.println("2 - Vendas");
-        System.out.println("3 - Financeiro");
-        System.out.println("4 - Clientes");
-        System.out.println("0 - Sair");
+        System.out.println("1. Produtos");
+        System.out.println("2. Vendas");
+        System.out.println("3. Financeiro");
+        System.out.println("4. Clientes");
+        System.out.println("5. Relatórios");
+        System.out.println("0. Sair");
         printLinha();
         System.out.println();
     }
 
     private void printMenuProdutos() {
         printTitulo("Produtos");
-        System.out.println("1 - Cadastrar produto");
-        System.out.println("2 - Listar produtos");
-        System.out.println("3 - Editar produto");
-        System.out.println("4 - Inativar produto");
-        System.out.println("5 - Ajustar estoque");
-        System.out.println("0 - Voltar");
+        System.out.println("1. Cadastrar produto");
+        System.out.println("2. Listar produtos");
+        System.out.println("3. Editar produto");
+        System.out.println("4. Inativar produto");
+        System.out.println("5. Ajustar estoque");
+        System.out.println("0. Voltar");
         printLinha();
         System.out.println();
     }
 
     private void printMenuVendas() {
         printTitulo("Vendas");
-        System.out.println("1 - Registrar venda");
-        System.out.println("2 - Listar vendas");
-        System.out.println("0 - Voltar");
+        System.out.println("1. Registrar venda");
+        System.out.println("2. Listar vendas");
+        System.out.println("0. Voltar");
         printLinha();
         System.out.println();
     }
 
     private void printMenuFinanceiro() {
         printTitulo("Financeiro");
-        System.out.println("1 - Registrar pagamento");
-        System.out.println("2 - Listar vendas a receber");
-        System.out.println("0 - Voltar");
+        System.out.println("1. Registrar pagamento");
+        System.out.println("2. Listar vendas a receber");
+        System.out.println("0. Voltar");
         printLinha();
         System.out.println();
     }
 
     private void printMenuClientes() {
         printTitulo("Clientes");
-        System.out.println("1 - Cadastrar cliente");
-        System.out.println("2 - Listar clientes");
-        System.out.println("0 - Voltar");
+        System.out.println("1. Cadastrar cliente");
+        System.out.println("2. Listar clientes");
+        System.out.println("0. Voltar");
+        printLinha();
+        System.out.println();
+    }
+
+    private void printMenuRelatorio() {
+        printTitulo("Relatórios");
+        System.out.println("1. Vendas por período");
+        System.out.println("0. Voltar");
         printLinha();
         System.out.println();
     }
@@ -90,6 +107,7 @@ public class ConsoleApp {
             case 2 -> menuVendas();
             case 3 -> menuFinanceiro();
             case 4 -> menuClientes();
+            case 5 -> menuRelatorios();
             case 0 -> running = false;
             default -> System.out.println("Opção inválida. Tente novamente.");
         }
@@ -203,6 +221,24 @@ public class ConsoleApp {
                     System.out.println("Opção inválida. Tente novamente.");
                     pressionarEnterParaContinuar();
                 }
+            }
+        }
+    }
+
+    private void menuRelatorios() {
+        boolean voltar = false;
+
+        while (!voltar) {
+            printMenuRelatorio();
+            int opcao = readInt("Escolha uma opção: ");
+
+            switch (opcao) {
+                case 1 -> exibirRelatorioVendasPorPeriodo();
+                case 0 -> {
+                    System.out.println("Voltando ao menu principal..");
+                    voltar = true;
+                }
+                default -> System.out.println("Opção inválida.");
             }
         }
     }
@@ -803,7 +839,7 @@ public class ConsoleApp {
     }
 
     private Venda selecionarVendaAReceberPorNumero() {
-        printTitulo("Selecionar vend a receber");
+        printTitulo("Selecionar venda a receber");
 
         try {
             List<Venda> vendas = vendaService.listarVendasAReceberComItens();
@@ -846,4 +882,68 @@ public class ConsoleApp {
             return null;
         }
     }
+
+    private void exibirRelatorioVendasPorPeriodo() {
+        try {
+            printTitulo("RELATÓRIO: VENDAS POR PERÍODO");
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+            NumberFormat moeda = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+
+            System.out.println("Data inicial (0 para cancelar): ");
+            String entradaInicial = scanner.nextLine().trim();
+            if (entradaInicial.equals("0")) {
+                System.out.println("Operação cancelada");
+                return;
+            }
+
+            System.out.println("Data final (0 para cancelar): ");
+            String entradaFinal = scanner.nextLine().trim();
+            if (entradaFinal.equals("0")) {
+                System.out.println("Operação cancelada");
+                return;
+            }
+
+            LocalDate dataInicial = LocalDate.parse(entradaInicial, formatter);
+            LocalDate dataFinal = LocalDate.parse(entradaFinal, formatter);
+
+            List<RelatorioVendasPeriodoItem> itens = relatorioVendaService.buscarVendasPorPeriodo(dataInicial, dataFinal);
+
+            if (itens.isEmpty()) {
+                System.out.println("\nNunhama venda encontrada no período informado.");
+                return;
+            }
+
+            printTitulo("VENDAS ENCONTRADAS");
+            for (RelatorioVendasPeriodoItem item : itens) {
+                String dataFormatada = item.getDataVenda().format(formatter);
+                String valorFormatado = moeda.format(item.getValorTotal());
+
+                System.out.printf(
+                        "Venda #%d | Data: %s | Cliente: %s | Status: %s | Total: %s%n",
+                        item.getVendaId(),
+                        dataFormatada,
+                        item.getClienteNome(),
+                        item.getStatus(),
+                        valorFormatado
+                );
+            }
+
+            int quantidadeVendas = relatorioVendaService.calcularQuantidadeVendas(itens);
+            BigDecimal totalVendido = relatorioVendaService.calcularTotalVendidoNoPeriodo(itens);
+
+            printTitulo("RESUMO DO PERÍODO");
+            System.out.println("Quantidade de vendas: " + quantidadeVendas);
+            System.out.println("Total vendido: " + moeda.format(totalVendido));
+
+        } catch (DateTimeParseException e) {
+            System.out.println("Data inválida.Use o formato dd-MM-yyyy.");
+            System.out.println("DEBUG erro ao converter data: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        } catch (RuntimeException e) {
+            System.out.println("Erro ao gerar o relatório: " + e.getMessage());
+        }
+    }
+
 }
