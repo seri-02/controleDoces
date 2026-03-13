@@ -29,7 +29,7 @@ Projeto console (CLI), desenvolvido em Java puro com JDBC.
 
 ---
 
-## 📂 Estrutura do projeto (V2.2.1)
+## 📂 Estrutura do projeto (V2.3)
 
 <pre>
  com.jonathas
@@ -38,12 +38,16 @@ Projeto console (CLI), desenvolvido em Java puro com JDBC.
  ├── database
  │   └── ConnectionFactory.java
  ├── model
+ │   ├── report
+ │   │   └── RelatorioVendasPeriodoItem.java
  │   ├── Produto.java
  │   ├── Emitente.java 
  │   ├── Venda.java
  │   ├── ItemVenda.java
  │   └── Pagamento.java
  ├── repository
+ │   ├── report
+ │   │   └── RelatorioVendasRepository.java
  │   ├── ProdutoRepository.java
  │   ├── EmitenteRepository.java 
  │   ├── VendaRepository.java
@@ -51,6 +55,7 @@ Projeto console (CLI), desenvolvido em Java puro com JDBC.
  │   └── PagamentoRepository.java
  ├── service
  │    └── VendaService.java
+ │    ├── RelatorioVendaService.java 
  └── Main.java
 </pre>
 
@@ -97,6 +102,18 @@ Projeto console (CLI), desenvolvido em Java puro com JDBC.
 
 ---
 
+### 📈 Relatórios
+- Vendas por período
+  - Filtro por data inicial e final
+  - Busca no banco
+  - Exibição em tela
+  - Resumo com:
+    - Quantidade de vendas
+    - Total vendido no período
+  - Saída mais legível para uso real
+
+---
+
 ### 🔄 Regras de Negócio
 - Venda deve conter ao menos 1 item
 - Cliente é obrigatório em toda venda
@@ -128,11 +145,10 @@ Projeto console (CLI), desenvolvido em Java puro com JDBC.
 ---
 
 ## 📌 Status
-✅ V2.2.1: pagamento parcial, saldo devedor e melhoria de UX no CLI
+✅ V2.3: Relatório: Vendas por período
 
 ### Próximos passos:
-- V2.3: Relatórios
-  - vendas por período
+- V2.3.1: Relatórios
   - vendas por produto
   - ranking de produtos
   - ranking de clientes
